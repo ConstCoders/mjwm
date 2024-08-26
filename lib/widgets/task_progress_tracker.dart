@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/task.dart';
 import '../screens/task_details_screen.dart';
 
-
 class TaskProgressTracker extends StatelessWidget {
   final Task task;
 
@@ -15,7 +14,7 @@ class TaskProgressTracker extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TaskDetailsScreen(task: task),
+            builder: (context) => TaskDetailsPage(task: task),
           ),
         );
       },
@@ -28,7 +27,7 @@ class TaskProgressTracker extends StatelessWidget {
         child: Column(
           children: [
             ListTile(
-              title: Text('Task: ${task.id}', style: TextStyle(fontWeight: FontWeight.bold)),
+              title: Text('Task: ${task.taskName ?? task.id}', style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text('Timestamp: ${task.timestamp}'),
             ),
             _buildTaskTable(),
@@ -63,7 +62,7 @@ class TaskProgressTracker extends StatelessWidget {
         ),
         TableRow(
           children: [
-            _buildTableCell(task.id),
+            _buildTableCell(task.taskName ?? task.id),
             _buildStatusCell(task.invoiceSend),
             _buildStatusCell(task.packing),
             _buildStatusCell(task.dispatch),
@@ -89,9 +88,11 @@ class TaskProgressTracker extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusCell(String status) {
+  Widget _buildStatusCell(String? status) {
+    String displayStatus = status ?? 'unknown';
     Color bgColor;
-    switch (status) {
+
+    switch (displayStatus) {
       case 'completed':
         bgColor = Colors.green;
         break;
@@ -109,7 +110,7 @@ class TaskProgressTracker extends StatelessWidget {
       color: bgColor,
       padding: const EdgeInsets.all(8.0),
       child: Text(
-        status,
+        displayStatus,
         textAlign: TextAlign.center,
         style: TextStyle(color: Colors.white),
       ),
