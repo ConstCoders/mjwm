@@ -4,19 +4,21 @@ class Task {
   String id;
   String delivery;
   String dispatch;
-  String image;
-  String invoiceSend;
+  List<String> invoiceImages; // List of invoice image URLs
   String packing;
   DateTime timestamp;
+  String voiceMessageUrl; // URL for voice message
+  List<String> dispatchImages; // List of dispatch image URLs
 
   Task({
     required this.id,
     required this.delivery,
     required this.dispatch,
-    required this.image,
-    required this.invoiceSend,
+    required this.invoiceImages,
     required this.packing,
     required this.timestamp,
+    required this.voiceMessageUrl,
+    required this.dispatchImages,
   });
 
   factory Task.fromMap(String id, Map<String, dynamic> data) {
@@ -24,10 +26,11 @@ class Task {
       id: id,
       delivery: data['delivery'],
       dispatch: data['dispatch'],
-      image: data['image'],
-      invoiceSend: data['invoiceSend'],
+      invoiceImages: List<String>.from(data['invoiceImages'] ?? []), // Convert to List<String>
       packing: data['packing'],
       timestamp: (data['timestamp'] as Timestamp).toDate(),
+      voiceMessageUrl: data['voiceMessageUrl'] ?? '',
+      dispatchImages: List<String>.from(data['dispatchImages'] ?? []), // Convert to List<String>
     );
   }
 
@@ -35,10 +38,11 @@ class Task {
     return {
       'delivery': delivery,
       'dispatch': dispatch,
-      'image': image,
-      'invoiceSend': invoiceSend,
+      'invoiceImages': invoiceImages, // Store as List<String>
       'packing': packing,
       'timestamp': timestamp,
+      'voiceMessageUrl': voiceMessageUrl,
+      'dispatchImages': dispatchImages, // Store as List<String>
     };
   }
 }

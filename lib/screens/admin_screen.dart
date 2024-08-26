@@ -3,14 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mjworkmanagement/screens/image_list_screen.dart';
 import 'package:mjworkmanagement/screens/payment.dart';
-import 'package:mjworkmanagement/screens/payment_status.dart';
-import 'employee.dart';
-import 'register.dart';
-import 'login_screen.dart';
-import '../models/task.dart';
-import '../widgets/task_progress_tracker.dart';
-import 'task_details_screen.dart';
-
+import 'package:mjworkmanagement/screens/employee.dart';
+import 'package:mjworkmanagement/screens/prodetails.dart';
+import 'package:mjworkmanagement/screens/products.dart';
+import 'package:mjworkmanagement/screens/register.dart';
+import 'package:mjworkmanagement/screens/login_screen.dart';
+import 'package:mjworkmanagement/models/task.dart';
+import 'package:mjworkmanagement/widgets/task_progress_tracker.dart';
+import 'package:mjworkmanagement/screens/task_details_screen.dart';
 
 class AdminPanel extends StatefulWidget {
   @override
@@ -19,6 +19,7 @@ class AdminPanel extends StatefulWidget {
 
 class _AdminPanelState extends State<AdminPanel> {
   List<Task> tasks = [];
+  bool isLoading = true; // Track loading state
 
   @override
   void initState() {
@@ -35,29 +36,56 @@ class _AdminPanelState extends State<AdminPanel> {
   }
 
   Future<void> _loadTasks() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       var snapshot = await FirebaseFirestore.instance.collection('tasks').get();
-      var taskList = snapshot.docs.map((doc) {
+
+      if (snapshot.docs.isEmpty) {
+        setState(() {
+          tasks = [];
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Use a proper null-safe mapping
+      List<Task> taskList = snapshot.docs.map((doc) {
         var data = doc.data();
-        return Task.fromMap(doc.id, data);
-      }).toList();
+        print("Task Data: $data");
+
+        // Check if the task has a valid timestamp
+        if (data.containsKey('timestamp') && data['timestamp'] != null) {
+          return Task.fromMap(doc.id, data); // Return the task if valid
+        } else {
+          print("Skipping task due to missing timestamp: ${doc.id}");
+          return null; // Return null if timestamp is missing
+        }
+      }).where((task) => task != null).map((task) => task as Task).toList(); // Filter out null values
 
       // Sort tasks by newest update
-      taskList.sort((a, b) {
-        return b.timestamp.compareTo(a.timestamp);
-      });
+      taskList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
       setState(() {
         tasks = taskList;
-        print("Tasks loaded: ${tasks.length}"); // Debug statement
+        isLoading = false;
       });
     } catch (e) {
-      print("Error loading tasks: $e"); // Debug statement
+      print("Error loading tasks: $e");
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load tasks: $e")),
+      );
     }
   }
 
-  void _updateTaskStatus(String taskId, String field, String value) {
-    setState(() {
+
+  void _updateTaskStatus(String taskId, String field, String value) async {
+    try {
       Task task = tasks.firstWhere((task) => task.id == taskId);
       switch (field) {
         case 'delivery':
@@ -74,11 +102,21 @@ class _AdminPanelState extends State<AdminPanel> {
           break;
       }
 
-      FirebaseFirestore.instance.collection('tasks').doc(taskId).update({
+      await FirebaseFirestore.instance.collection('tasks').doc(taskId).update({
         field: value,
-        'timestamp': DateTime.now(),
+        'timestamp': DateTime.now(), // Update timestamp on status change
       });
-    });
+
+      setState(() {
+        // Trigger a UI update
+      });
+    } catch (e) {
+      print("Error updating task status: $e");
+      // Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to update task: $e")),
+      );
+    }
   }
 
   @override
@@ -124,6 +162,18 @@ class _AdminPanelState extends State<AdminPanel> {
               },
             ),
             ListTile(
+              leading: Icon(Icons.production_quantity_limits),
+              title: Text('Products'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductListPage(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
               leading: Icon(Icons.image),
               title: Text('Employees'),
               onTap: () {
@@ -139,7 +189,8 @@ class _AdminPanelState extends State<AdminPanel> {
               leading: Icon(Icons.supervised_user_circle),
               title: Text('Users'),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => RegisterScreen()));
               },
             ),
             ListTile(
@@ -150,7 +201,11 @@ class _AdminPanelState extends State<AdminPanel> {
           ],
         ),
       ),
-      body: ListView.builder(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator()) // Show loading indicator
+          : tasks.isEmpty
+          ? Center(child: Text('No tasks available')) // Show this if no tasks are loaded
+          : ListView.builder(
         itemCount: tasks.length,
         itemBuilder: (context, index) {
           Task task = tasks[index];
@@ -159,7 +214,7 @@ class _AdminPanelState extends State<AdminPanel> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => TaskDetailsScreen(task: task),
+                  builder: (context) => TaskDetailsPage(task: task),
                 ),
               );
             },
@@ -170,6 +225,3 @@ class _AdminPanelState extends State<AdminPanel> {
     );
   }
 }
-
-
-

@@ -1,89 +1,193 @@
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
 import '../models/task.dart';
 
-class TaskDetailsScreen extends StatelessWidget {
+class TaskDetailsPage extends StatelessWidget {
   final Task task;
-  final AudioPlayer audioPlayer = AudioPlayer();
 
-  TaskDetailsScreen({required this.task});
+  const TaskDetailsPage({Key? key, required this.task}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Task Details'),
+        title: Text(task.taskName ?? 'Task Details'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Task ID: ${task.id}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              SizedBox(height: 10),
-              _buildStatusDetail('Assigned To:', task.assignedTo),
-              _buildStatusDetail('Completed By:', task.completedBy),
-              _buildStatusDetail('Invoice Sent:', task.invoiceSend),
-              _buildStatusDetail('Packing:', task.packing),
-              _buildStatusDetail('Dispatch:', task.dispatch),
-              _buildStatusDetail('Delivery:', task.delivery),
-              SizedBox(height: 20),
-              Text('Timestamp: ${task.timestamp}', style: TextStyle(color: Colors.grey)),
-              SizedBox(height: 20),
-              if (task.invoiceImage.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Invoice Image:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 10),
-                    Image.network(task.invoiceImage),
-                    SizedBox(height: 20),
-                  ],
-                ),
-              if (task.deliveryImage.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Delivery Image:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 10),
-                    Image.network(task.deliveryImage),
-                    SizedBox(height: 20),
-                  ],
-                ),
-              if (task.voiceMessageUrl.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Voice Message:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 10),
-                    IconButton(
-                      icon: Icon(Icons.play_arrow),
-                      onPressed: () async {
-                        await audioPlayer.play(UrlSource(task.voiceMessageUrl));
-                      },
-                    ),
-                    SizedBox(height: 20),
-                  ],
-                ),
-              // Add other fields as necessary
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailRow('Task Name', task.taskName),
+            _buildDetailRow('Assigned To', task.assignedTo),
+            _buildDetailRow('Completed By', task.completedBy),
+            _buildDetailRow('Invoice Send Status', task.invoiceSend),
+            _buildDetailRow('Packing Status', task.packing),
+            _buildDetailRow('Dispatch Status', task.dispatch),
+            _buildDetailRow('Delivery Status', task.delivery),
+            _buildDetailRow('Timestamp', task.timestamp.toString()),
+
+            const SizedBox(height: 16),
+            _buildImagesSection('Invoice Images', task.images),
+            const SizedBox(height: 16),
+            _buildSingleImageSection('Delivered Image', task.deliveredImage),
+            const SizedBox(height: 16),
+            _buildImagesSection('Dispatch Images', task.dispatchImage),
+
+            const SizedBox(height: 16),
+            _buildAudioSection('Voice Message', task.voiceMessageUrl),
+            _buildAudioSection('Dispatch Audio', task.dispatchAudio),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusDetail(String label, String? status) {
+  Widget _buildDetailRow(String label, String? value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         children: [
-          Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(width: 10),
-          Text(status ?? 'N/A'),
+          Text(
+            '$label: ',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Expanded(
+            child: Text(
+              value ?? 'N/A',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  Widget _buildImagesSection(String label, List<String>? imageUrls) {
+    if (imageUrls == null || imageUrls.isEmpty) {
+      return _buildDetailRow(label, 'No images');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label:',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 8.0,
+          children: imageUrls.map((url) {
+            return GestureDetector(
+              onTap: () {
+                // Implement image full screen view
+              },
+              child: Image.network(
+                url,
+                height: 100,
+                width: 100,
+                fit: BoxFit.cover,
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 100,
+                    width: 100,
+                    color: Colors.grey[200],
+                    child: Icon(Icons.broken_image, color: Colors.grey),
+                  );
+                },
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSingleImageSection(String label, String? imageUrl) {
+    if (imageUrl == null) {
+      return _buildDetailRow(label, 'No image');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label:',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () {
+            // Implement full screen image view logic
+          },
+          child: Image.network(
+            imageUrl,
+            height: 150,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            loadingBuilder: (BuildContext context, Widget child,
+                ImageChunkEvent? loadingProgress) {
+              if (loadingProgress == null) return child;
+              return SizedBox(
+                height: 150,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                height: 150,
+                color: Colors.grey[200],
+                child: Icon(Icons.broken_image, color: Colors.grey),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAudioSection(String label, String? audioUrl) {
+    if (audioUrl == null) {
+      return _buildDetailRow(label, 'No audio');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label:',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        IconButton(
+          icon: Icon(Icons.play_arrow),
+          onPressed: () {
+            // Implement audio playback logic here
+          },
+        ),
+      ],
+    );
+  }
 }
+

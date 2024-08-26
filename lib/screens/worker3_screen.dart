@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -6,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import '../widgets/neu.dart';
 import 'login_screen.dart';
 
 class Worker3Screen extends StatefulWidget {
@@ -117,33 +120,127 @@ class _Worker3ScreenState extends State<Worker3Screen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(onPressed: _logout, icon: Icon(Icons.logout))
-        ],
-        title: Text('Worker 3 Dashboard'),
-        backgroundColor: Colors.blueAccent,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: "New Tasks"),
-            Tab(text: "Completed Tasks"),
-          ],
+backgroundColor: Colors.white,
+      body: DefaultTabController(`
+        length: 2,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(18.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hi',
+                            style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 22,
+                                fontWeight: FontWeight.w500),
+                          ),
+                          FutureBuilder<DocumentSnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(FirebaseAuth.instance.currentUser!.uid)
+                                .get(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return CircularProgressIndicator(
+                                    color: Colors.white);
+                              }
+                              if (snapshot.hasData && snapshot.data!.exists) {
+                                String userName =
+                                    snapshot.data!['username'] ?? 'User';
+                                return Text('$userName',
+                                    style: TextStyle(
+                                        color: Colors.grey[900],
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w700));
+                              }
+                              return Text('Welcome',
+                                  style: TextStyle(fontSize: 18));
+                            },
+                          ),
+                        ],
+                      ),
+                      NeuMo(
+                        widget: IconButton(
+                            onPressed: () {},
+                            icon: Icon(
+                              Icons.notifications,
+                              size: 30,
+                              color: Colors.cyan,
+                            )),
+                        height: 60,
+                        width: 60,
+                      )
+                    ],
+                  ),
+                ),
+                NeuMo(
+                  height: 60,
+                  widget: Container(
+                    // Customize color to match the design
+                    child: TabBar(
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      controller: _tabController,
+                      indicator: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.blueAccent.shade100,
+                      ),
+                      labelColor: Colors.blue[800],
+                      labelStyle:
+                      TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                      unselectedLabelColor: Colors.grey.shade600,
+                      tabs: [
+                        Tab(
+                          text: "Packages",
+                        ),
+                        Tab(text: "Dispatched"),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildTaskList('Packages'),
+                      _buildTaskList('Dispatched'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildTaskList('New Tasks'),
-          _buildTaskList('Completed Tasks'),
-        ],
+      floatingActionButton: NeuMo(
+        widget: IconButton(
+            onPressed: _logout,
+            icon: Icon(
+              Icons.power_settings_new_outlined,
+              size: 25,
+              color: Colors.orange,
+            )),
+        height: 60,
+        width: 60,
       ),
     );
   }
-
   Widget _buildTaskList(String tabType) {
     Stream<QuerySnapshot> stream;
-    if (tabType == 'New Tasks') {
+    if (tabType == 'Packages') {
       stream = FirebaseFirestore.instance
           .collection('tasks')
           .where('packing', isEqualTo: 'completed')
@@ -167,78 +264,64 @@ class _Worker3ScreenState extends State<Worker3Screen> with SingleTickerProvider
         return ListView.builder(
           itemCount: tasks.length,
           itemBuilder: (context, index) {
-            var task = tasks[index];
+            var task = tasks[index]; // No need to cast, as 'task' is dynamic
             var taskId = task.id;
             var timestamp = task['timestamp']?.toDate();
             var formattedTimestamp = timestamp != null
                 ? "${timestamp.toLocal().toString().split(' ')[0]} ${timestamp.toLocal().toString().split(' ')[1].substring(0, 5)}"
                 : 'Unknown time';
 
-            return ListTile(
-              leading: task['images'] != null && task['images'].length > 0
-                  ? GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FullImageScreen(
-                        imageUrls: List<String>.from(task['images']),
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: NeuMo(
+                height: 70,
+                widget: ListTile(
+                  leading: task['images'] != null && task['images'].length > 0
+                      ? GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FullImageScreen(
+                            imageUrls: List<String>.from(task['images']),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      child: Image.network(
+                        task['images'][0], // Display the first image as a preview
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  );
-                },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  child: Image.network(
-                    task['images'][0], // Display the first image as a preview
-                    fit: BoxFit.cover,
-                  ),
+                  )
+                      : null,
+                  subtitle: Text(DateFormat('yyyy-MM-dd HH:mm')
+                      .format(task['timestamp'].toDate())),
+                  title: Text(task['taskName'], style: TextStyle(fontSize: 18,fontWeight: FontWeight.w500)),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => tabType == 'Packages'
+                            ? TaskDetailScreen(task: task) // Pass dynamic task
+                            : CompletedTaskDetailScreen(task: task), // Pass dynamic task
+                      ),
+                    );
+                  },
+
+
                 ),
-              )
-                  : null,
-              title: Text('Task received at $formattedTimestamp'),
-              subtitle: Text(taskId, style: TextStyle(fontSize: 10)),
-              trailing: tabType == 'New Tasks'
-                  ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: () async {
-                      await _assignTaskToWorker4(taskId);
-                    },
-                    icon: Icon(Icons.check),
-                    tooltip: 'Complete',
-                  ),
-                  SizedBox(height: 8),
-                  IconButton(
-                    onPressed: _isRecordingMap[taskId] == true
-                        ? () => _stopRecording(taskId)
-                        : () => _startRecording(taskId),
-                    icon: Icon(_isRecordingMap[taskId] == true
-                        ? Icons.stop
-                        : Icons.mic),
-                    tooltip: _isRecordingMap[taskId] == true
-                        ? 'Stop Recording'
-                        : 'Start Recording',
-                  ),
-                ],
-              )
-                  : Text('Assigned to: ${task['assignedTo'] ?? 'N/A'}'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TaskDetailScreen(task: task),
-                  ),
-                );
-              },
+              ),
             );
           },
         );
       },
     );
   }
+
 
   Future<void> _assignTaskToWorker4(String taskId) async {
     User? assignedUser;
@@ -534,10 +617,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   Widget build(BuildContext context) {
     var imageUrls = List<String>.from(widget.task['images'] ?? []);
     var taskId = widget.task.id;
+    var name = widget.task['taskName'];
 
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text('Task Details'),
+        backgroundColor: Colors.grey[100],
+        title: Text('Task Details',style: TextStyle(fontWeight: FontWeight.w500)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -565,34 +651,179 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 ),
               ),
             SizedBox(height: 16),
-            Text('Task ID: $taskId'),
+            Text('Task Name: $name',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 18,color: Colors.blueAccent)),
             // SizedBox(height: 8),
             // Text('Assigned To: ${widget.task['assignedTo'] ?? 'N/A'}'),
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _captureImages,
-              child: Text('Capture Images'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                NeuMo(
+                  height: 60,width: 60,
+                  widget: IconButton(
+
+
+                    onPressed: _captureImages,
+                    icon: Icon(Icons.image,size: 30,color: Colors.orange,),
+                  ),
+                ),
+                NeuMo(
+                  height: 60,width: 60,
+                  widget: IconButton(
+
+
+                    onPressed: _isRecording ? _stopRecording : _startRecording,
+                    icon: Icon(_isRecording ? Icons.stop_circle : Icons.mic,size: 30,color: Colors.teal,),
+                  ),
+                ),
+                NeuMo(
+                  height: 60,width: 60,
+                  widget: IconButton(
+
+
+    onPressed: () => _assignTaskToWorker4(taskId),
+                    icon: Icon(Icons.send,size: 30,color: Colors.lightGreen,),
+                  ),
+                ),
+
+              ],
             ),
             SizedBox(height: 16),
             if (_capturedImages.isNotEmpty)
               Wrap(
                 spacing: 8,
                 children: _capturedImages
-                    .map((image) => Image.file(image, height: 100))
+                    .map((image) => Image.file(image, height: 100,width: 100,fit: BoxFit.cover,))
                     .toList(),
               ),
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _isRecording ? _stopRecording : _startRecording,
-              child: Text(_isRecording ? 'Stop Recording' : 'Record Audio'),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _assignTaskToWorker4(taskId),
-              child: Text('Assign to Worker 4'),
-            ),
+
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+
+class CompletedTaskDetailScreen extends StatelessWidget {
+  final dynamic task;
+
+  CompletedTaskDetailScreen({required this.task});
+
+  @override
+  Widget build(BuildContext context) {
+    var imageUrls = List<String>.from(task['dispatchImage'] ?? []);
+    var audioUrl = task['dispatchAudio'];
+    var taskId = task.id;
+    var assignedTo = task['assignedTo'] ?? 'N/A';
+    var taskName = task['taskName'] ?? 'N/A';
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: Text('Dispatched Details',style: TextStyle(fontWeight: FontWeight.w500),),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Task Name: $taskName'
+                '',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 18,color: Colors.teal)),
+            SizedBox(height: 8),
+            Text('Assigned To: $assignedTo',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 18,color: Colors.blueAccent)),
+            SizedBox(height: 16),
+            if (imageUrls.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Dispatch Images:', style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16)),
+                  SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: imageUrls
+                        .map((imageUrl) => GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                FullImageScreen(imageUrls: imageUrls),
+                          ),
+                        );
+                      },
+                      child: Image.network(
+                        imageUrl,
+                        height: 100,
+                        fit: BoxFit.cover,
+                      ),
+                    ))
+                        .toList(),
+                  ),
+                ],
+              ),
+            SizedBox(height: 16),
+            if (audioUrl != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Dispatch Audio:', style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16)),
+                  SizedBox(height: 12),
+                  AudioPlayerWidget(audioUrl: audioUrl),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AudioPlayerWidget extends StatefulWidget {
+  final String audioUrl;
+
+  AudioPlayerWidget({required this.audioUrl});
+
+  @override
+  _AudioPlayerWidgetState createState() => _AudioPlayerWidgetState();
+}
+
+class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool isPlaying = false;
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _togglePlayPause() async {
+    if (isPlaying) {
+      await _audioPlayer.pause();
+    } else {
+      await _audioPlayer.play(UrlSource(widget.audioUrl));
+    }
+    setState(() {
+      isPlaying = !isPlaying;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NeuMo(
+      height: 60,
+      widget: Row(
+        children: [
+          IconButton(
+            icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+            onPressed: _togglePlayPause,
+          ),
+          Text(isPlaying ? 'Pause' : 'Play',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 18,color: Colors.green)),
+        ],
       ),
     );
   }

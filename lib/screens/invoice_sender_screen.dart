@@ -6,6 +6,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:intl/intl.dart';
+import 'package:mjworkmanagement/widgets/neu.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
@@ -19,7 +21,8 @@ class InvoiceSenderScreen extends StatefulWidget {
   _InvoiceSenderScreenState createState() => _InvoiceSenderScreenState();
 }
 
-class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTickerProviderStateMixin {
+class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<XFile> _selectedImages = [];
   bool _uploading = false;
@@ -71,6 +74,7 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
       print("Error selecting images: $e");
     }
   }
+
   Future<void> deleteTask(String taskId) async {
     try {
       await FirebaseFirestore.instance.collection('tasks').doc(taskId).delete();
@@ -81,7 +85,9 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
   }
 
   Future<void> _uploadImageAndAudio() async {
-    if (_selectedImages.isEmpty || _recordedFilePath == null || _taskNameController.text.isEmpty) return;
+    if (_selectedImages.isEmpty ||
+        _recordedFilePath == null ||
+        _taskNameController.text.isEmpty) return;
 
     setState(() {
       _uploading = true;
@@ -95,8 +101,10 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
       for (var image in _selectedImages) {
         File file = File(image.path);
 
-        String imageFileName = '${DateTime.now().millisecondsSinceEpoch}_${basename(file.path)}';
-        Reference storageRefImage = FirebaseStorage.instance.ref().child('uploads/$imageFileName');
+        String imageFileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${basename(file.path)}';
+        Reference storageRefImage =
+            FirebaseStorage.instance.ref().child('uploads/$imageFileName');
         UploadTask uploadTaskImage = storageRefImage.putFile(file);
         TaskSnapshot taskSnapshotImage = await uploadTaskImage;
         String imageUrl = await taskSnapshotImage.ref.getDownloadURL();
@@ -104,8 +112,10 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
       }
 
       String audioFileName = basename(_recordedFilePath!);
-      Reference storageRefAudio = FirebaseStorage.instance.ref().child('uploads/$audioFileName');
-      UploadTask uploadTaskAudio = storageRefAudio.putFile(File(_recordedFilePath!));
+      Reference storageRefAudio =
+          FirebaseStorage.instance.ref().child('uploads/$audioFileName');
+      UploadTask uploadTaskAudio =
+          storageRefAudio.putFile(File(_recordedFilePath!));
       TaskSnapshot taskSnapshotAudio = await uploadTaskAudio;
       String audioUrl = await taskSnapshotAudio.ref.getDownloadURL();
 
@@ -142,7 +152,8 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
   }
 
   Future<void> _ensureTasksCollectionExists() async {
-    CollectionReference tasksCollection = FirebaseFirestore.instance.collection('tasks');
+    CollectionReference tasksCollection =
+        FirebaseFirestore.instance.collection('tasks');
     var snapshot = await tasksCollection.get();
     if (snapshot.size == 0) {
       await tasksCollection.doc().set({
@@ -178,7 +189,8 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
 
   void _startRecording() async {
     if (await Permission.microphone.request().isGranted) {
-      String path = '${(await getTemporaryDirectory()).path}/${DateTime.now().millisecondsSinceEpoch}.aac';
+      String path =
+          '${(await getTemporaryDirectory()).path}/${DateTime.now().millisecondsSinceEpoch}.aac';
       await _recorder!.startRecorder(
         toFile: path,
         codec: Codec.aacADTS,
@@ -213,75 +225,115 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
   Widget _buildUploadImageTab() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextField(
-            controller: _taskNameController,
-            decoration: InputDecoration(
-              labelText: 'Task Name',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _chooseImages,
-            child: Text('Choose Multiple Images'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueAccent,
-              minimumSize: Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-          SizedBox(height: 20),
-          if (_isRecording)
-            ElevatedButton(
-              onPressed: _stopRecording,
-              child: Text('Stop Recording'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                minimumSize: Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            )
-          else
-            ElevatedButton(
-              onPressed: _startRecording,
-              child: Text('Record Voice Message'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.greenAccent,
-                minimumSize: Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(height: 150,),
+            NeuMo(
+              height: 70,
+              widget: TextField(
+                controller: _taskNameController,
+                decoration: InputDecoration(
+                  labelText: 'Task Name',
+                  labelStyle: TextStyle(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 15,vertical: 15),
+                  border:InputBorder.none,
                 ),
               ),
             ),
-          SizedBox(height: 20),
-          if (_uploading) CircularProgressIndicator(),
-          if (_selectedImages.isNotEmpty && !_uploading)
-            ElevatedButton(
-              onPressed: _uploadImageAndAudio,
-              child: Text('Upload Image and Audio'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                minimumSize: Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            SizedBox(height: 20),
+             Row(
+         mainAxisAlignment: MainAxisAlignment.spaceAround,
+         children: [
+           NeuMo(
+             height: 60,
+             widget: IconButton(
+               icon: Icon(Icons.image
+                   , size: 30, color: Colors.teal[300]),
+               onPressed: _chooseImages,
+               padding: EdgeInsets.all(16), // Adjust as needed
+             ),
+           ),
+        
+           SizedBox(height: 20),
+           if (_isRecording)
+             NeuMo(
+               height: 60,
+               widget: IconButton(
+                 icon: Icon(Icons.stop, size: 30, color: Colors.red),
+                 onPressed: _stopRecording,
+                 padding: EdgeInsets.all(16), // Adjust as needed
+               ),
+             )
+           else
+             NeuMo(
+               height: 60,
+               widget: IconButton(
+                 icon: Icon(Icons.mic, size: 30, color: Colors.blue),
+                 onPressed: _startRecording,
+                 padding: const EdgeInsets.all(16), // Adjust as needed
+               ),
+             ),
+         ],
+             ),
+            SizedBox(height: 20),
+            if (_uploading) CircularProgressIndicator(),
+            if (_selectedImages.isNotEmpty && !_uploading)
+              NeuMo(
+                height: 60,
+                widget: ElevatedButton(
+                  onPressed: _uploadImageAndAudio,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Upload Now ',style: TextStyle(color: Colors.green[800],fontSize: 18),),
+                      Icon(Icons.cloud_upload,color: Colors.green,size: 30,)
+                    ],
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[200],
+                    minimumSize: Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ),
+            SizedBox(height: 200,),
+            NeuMo(
+              height: 60,
+              widget: ElevatedButton(
+                onPressed: _uploadImageAndAudio,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Logout ',style: TextStyle(color: Colors.red[800],fontSize: 18),),
+                    Icon(Icons.logout,color: Colors.red,size: 20,)
+                  ],
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[200],
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
+
   }
 
   Widget _buildSentImagesTab() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('tasks').orderBy('timestamp', descending: true).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('tasks')
+          .orderBy('timestamp', descending: true)
+          .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Center(
@@ -293,54 +345,64 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
         return ListView.builder(
           itemCount: docs.length,
           itemBuilder: (context, index) {
-
             var task = docs[index];
             var images = List<String>.from(task['images'] ?? []);
-            return ListTile(
-              title: Text(task['taskName']),
-              subtitle: Text('Uploaded on ${task['timestamp'].toDate()}'),
-              leading: images.isNotEmpty
-                  ? Image.network(images[0], height: 50, width: 50, fit: BoxFit.cover)
-                  : Icon(Icons.image_not_supported),
-              onTap: () {
-                // Redirect to the InvoiceDetailsPage
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => InvoiceDetailsPage(invoice: task),
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: NeuMo(
+                height: 90,
+                widget: ListTile(
+                  title: Text(task['taskName'],style: TextStyle(fontWeight: FontWeight.bold),),
+                  subtitle: Text('Uploaded on ${task['timestamp'].toDate()}'),
+                  leading: images.isNotEmpty
+                      ? Image.network(images[0],
+                          height: 50, width: 50, fit: BoxFit.cover)
+                      : Icon(Icons.image_not_supported),
+                  onTap: () {
+                    // Redirect to the InvoiceDetailsPage
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => InvoiceDetailsPage(invoice: task),
+                      ),
+                    );
+                  },
+                  trailing: NeuMo(
+                    height: 50,
+                    widget: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        // Show confirmation dialog
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Delete Task'),
+                              content:
+                                  Text('Are you sure you want to delete this task?'),
+                              actions: [
+                                TextButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close the dialog
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('Delete'),
+                                  onPressed: () {
+                                    // Perform the delete operation
+                                    deleteTask(task.id); // Pass the task ID to delete
+                                    Navigator.of(context).pop(); // Close the dialog
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
-                );
-              },
-              trailing: IconButton(
-                icon: Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  // Show confirmation dialog
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text('Delete Task'),
-                        content: Text('Are you sure you want to delete this task?'),
-                        actions: [
-                          TextButton(
-                            child: Text('Cancel'),
-                            onPressed: () {
-                              Navigator.of(context).pop(); // Close the dialog
-                            },
-                          ),
-                          TextButton(
-                            child: Text('Delete'),
-                            onPressed: () {
-                              // Perform the delete operation
-                              deleteTask(task.id); // Pass the task ID to delete
-                              Navigator.of(context).pop(); // Close the dialog
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
+                ),
               ),
             );
           },
@@ -352,21 +414,44 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text('Invoice Sender'),
+        backgroundColor: Colors.grey[100],
+        elevation: 0,
+        centerTitle: true,
+        title: Text('Invoice Sender',style: TextStyle(fontWeight: FontWeight.w600,),),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Upload Image'),
-            Tab(text: 'Sent Images'),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logout,
+            Tab(
+              text: 'Upload Image',
+              icon: Icon(Icons.upload_file),
+            ),
+            Tab(
+              text: 'Sent Images',
+              icon: Icon(Icons.photo_library),
+            ),
+          ],indicatorSize: TabBarIndicatorSize.tab,
+          indicator: BoxDecoration(
+
+            color: Colors.blueAccent,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blueAccent.withOpacity(0.5),
+                spreadRadius: 1,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
-        ],
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.grey[600],
+          labelStyle: TextStyle(fontWeight: FontWeight.bold),
+          unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal),
+        ),
+
+
       ),
       body: TabBarView(
         controller: _tabController,
@@ -378,11 +463,6 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen> with SingleTi
     );
   }
 }
-
-
-
-
-
 
 class InvoiceDetailsPage extends StatefulWidget {
   final DocumentSnapshot invoice;
@@ -418,11 +498,13 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     } else {
       await _audioPlayer.play(UrlSource(url));
       // 1 indicates success
-        setState(() {
-          _isPlaying = true;
-        });
-
+      setState(() {
+        _isPlaying = true;
+      });
     }
+  }
+  String formatTimestamp(DateTime dateTime) {
+    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
   }
 
   @override
@@ -431,8 +513,18 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     String audioUrl = widget.invoice['audio'] ?? '';
 
     return Scaffold(
+      backgroundColor: Colors.grey[200], // Light grey background
       appBar: AppBar(
-        title: Text('Invoice Details'),
+        elevation: 0,
+        backgroundColor: Colors.grey[200],
+        title: Text(
+          'Invoice Details',
+          style: TextStyle(
+            color: Colors.black, // Dark text
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -440,49 +532,173 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Task Name
               Text(
                 'Task Name: ${widget.invoice['taskName']}',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent, // Colorful text
+                ),
               ),
               SizedBox(height: 10),
-              Text('Timestamp: ${widget.invoice['timestamp'].toDate()}'),
-              SizedBox(height: 10),
-              Text('Invoice Status: ${widget.invoice['invoiceSend']}'),
-              Text('Packing Status: ${widget.invoice['packing']}'),
-              Text('Dispatch Status: ${widget.invoice['dispatch']}'),
-              Text('Delivery Status: ${widget.invoice['delivery']}'),
+
+              // Timestamp without seconds
+              Text(
+                'Timestamp: ${formatTimestamp(widget.invoice['timestamp'].toDate())}',
+                style: TextStyle(fontSize: 16, color: Colors.purple),
+              ),
               SizedBox(height: 20),
-              Text('Images:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+
+              // Status in Table Format
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade300,
+                      offset: Offset(4, 4),
+                      blurRadius: 15,
+                      spreadRadius: 1,
+                    ),
+                    BoxShadow(
+                      color: Colors.white,
+                      offset: Offset(-4, -4),
+                      blurRadius: 15,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Table(
+                  columnWidths: {
+                    0: FlexColumnWidth(2),
+                    1: FlexColumnWidth(3),
+                  },
+                  children: [
+                    _buildTableRow(
+                      'Invoice Status',
+                      widget.invoice['invoiceSend'],
+                    ),
+                    _buildTableRow(
+                      'Packing Status',
+                      widget.invoice['packing'],
+                    ),
+                    _buildTableRow(
+                      'Dispatch Status',
+                      widget.invoice['dispatch'],
+                    ),
+                    _buildTableRow(
+                      'Delivery Status',
+                      widget.invoice['delivery'],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+
+              // Images in Vertical List
+              Text(
+                'Images:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 10),
               images.isNotEmpty
-                  ? SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: images.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Image.network(
-                        images[index],
-                        height: 100,
-                        width: 100,
-                        fit: BoxFit.cover,
+                  ? Column(
+                children: images.map((image) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Container(
+                      height: 200, // Larger vertical image
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade300,
+                            offset: Offset(4, 4),
+                            blurRadius: 15,
+                            spreadRadius: 1,
+                          ),
+                          BoxShadow(
+                            color: Colors.white,
+                            offset: Offset(-4, -4),
+                            blurRadius: 15,
+                            spreadRadius: 1,
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          image,
+                          fit: BoxFit.cover,
+                          height: 200,
+                          width: double.infinity,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               )
                   : Text('No images available'),
               SizedBox(height: 20),
-              Text('Audio:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+
+              // Audio Player
+              Text(
+                'Audio:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 10),
               audioUrl.isNotEmpty
-                  ? IconButton(
-                icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
-                onPressed: () {
-                  _playAudio(audioUrl);
-                },
+                  ? Container(
+                height: 60,
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade300,
+                      offset: Offset(4, 4),
+                      blurRadius: 15,
+                      spreadRadius: 1,
+                    ),
+                    BoxShadow(
+                      color: Colors.white,
+                      offset: Offset(-4, -4),
+                      blurRadius: 15,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        _isPlaying
+                            ? Icons.pause_circle_filled
+                            : Icons.play_circle_filled,
+                        size: 40,
+                        color: _isPlaying
+                            ? Colors.green
+                            : Colors.blueAccent,
+                      ),
+                      onPressed: () => _playAudio(audioUrl),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      _isPlaying ? 'Playing...' : 'Play Audio',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               )
                   : Text('No audio available'),
             ],
@@ -491,4 +707,37 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
       ),
     );
   }
-}
+
+  TableRow _buildTableRow(String label, String status) {
+    Color statusColor =
+    status.toLowerCase() == 'completed' ? Colors.green : Colors.red;
+
+    return TableRow(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            status,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: statusColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  }
+
