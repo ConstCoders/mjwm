@@ -102,6 +102,7 @@ class _ProductVideoPageState extends State<ProductVideoPage> {
         child: Form(
           key: _formKey,
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(

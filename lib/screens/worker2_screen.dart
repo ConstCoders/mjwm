@@ -92,7 +92,7 @@ class _Worker2ScreenState extends State<Worker2Screen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CupertinoColors.white,
+      backgroundColor: Color(0xFFE0E5EC),
       body: DefaultTabController(
         length: 2,
         child: SafeArea(
@@ -293,7 +293,7 @@ class _Worker2ScreenState extends State<Worker2Screen>
                           ),
                         )
                       : NeuMo(
-                          height: 60,
+                          height: 50,
                           widget: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
@@ -346,7 +346,7 @@ class TaskDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFE0E5EC),
       appBar: AppBar(
         title: Text(
           task['taskName'],
@@ -373,7 +373,7 @@ class TaskDetailsPage extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                   elevation: 0,
-                  backgroundColor: Colors.grey[300]),
+                backgroundColor: Color(0xFFE0E5EC)),
               onPressed: () {
                 // Play audio associated with the task
                 AudioPlayer().play(UrlSource(task['audio']));

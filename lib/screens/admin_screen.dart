@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:mjworkmanagement/screens/image_list_screen.dart';
 import 'package:mjworkmanagement/screens/payment.dart';
 import 'package:mjworkmanagement/screens/employee.dart';
@@ -18,6 +19,24 @@ class AdminPanel extends StatefulWidget {
 }
 
 class _AdminPanelState extends State<AdminPanel> {
+
+  String selectedFilter = 'All Time';
+
+  // Function to filter products based on the selected filter
+  bool _filterByDate(Timestamp timestamp) {
+    final date = timestamp.toDate();
+    final now = DateTime.now();
+    if (selectedFilter == 'Today') {
+      return DateFormat('yyyy-MM-dd').format(date) ==
+          DateFormat('yyyy-MM-dd').format(now);
+    } else if (selectedFilter == '7 Days') {
+      return now.difference(date).inDays <= 7;
+    } else if (selectedFilter == '28 Days') {
+      return now.difference(date).inDays <= 28;
+    }
+    return true; // 'All Time' shows all products
+  }
+
   List<Task> tasks = [];
   bool isLoading = true; // Track loading state
 
@@ -205,22 +224,75 @@ class _AdminPanelState extends State<AdminPanel> {
           ? Center(child: CircularProgressIndicator()) // Show loading indicator
           : tasks.isEmpty
           ? Center(child: Text('No tasks available')) // Show this if no tasks are loaded
-          : ListView.builder(
-        itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          Task task = tasks[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TaskDetailsPage(task: task),
-                ),
-              );
-            },
-            child: TaskProgressTracker(task: task),
-          );
+          : Column(
+            children: [
+              // Container(
+              //   height: 100,
+              //   padding: EdgeInsets.symmetric(vertical: 10),
+              //   color: Colors.grey[200],
+              //   child: SingleChildScrollView(
+              //     scrollDirection: Axis.horizontal,
+              //     child: Row(
+              //       mainAxisAlignment: MainAxisAlignment.center,
+              //       children: [
+              //         _buildFilterButton('Today'),
+              //         _buildFilterButton('7 Days'),
+              //         _buildFilterButton('28 Days'),
+              //         _buildFilterButton('All Time'),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              Expanded(
+                child: ListView.builder(
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                        itemCount: tasks.length,
+                        itemBuilder: (context, index) {
+                Task task = tasks[index];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TaskDetailsPage(task: task),
+                      ),
+                    );
+                  },
+                  child: TaskProgressTracker(task: task),
+                );
+                        },
+                      ),
+              ),
+            ],
+          ),
+    );
+  }
+  // Helper method to create filter buttons
+  Widget _buildFilterButton(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            selectedFilter = title;
+          });
         },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: selectedFilter == title ? Colors.grey[300] : Colors.grey[200],
+            borderRadius: BorderRadius.circular(20),
+
+          ),
+          child: Text(
+            title,
+            style: TextStyle(
+              color: selectedFilter == title ? Colors.black : Colors.grey[800],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -13,19 +13,22 @@ class NeuMo extends StatelessWidget {
     return Container(
 
       height: height ,width: width,
+
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.grey[200],
-          boxShadow: [
-            BoxShadow(
-                offset: Offset(8, 8),
-                color: Colors.grey,blurRadius: 30
-            ),
-            BoxShadow(
-                offset: Offset(-8, -8),
-                color: Colors.white,blurRadius: 30
-            )
-          ]
+        color: Color(0xFFE0E5EC),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade600,
+            offset: Offset(10, 10),
+            blurRadius: 20,
+          ),
+          BoxShadow(
+            color: Colors.white,
+            offset: Offset(-10, -10),
+            blurRadius: 20,
+          ),
+        ],
       ),
       child: widget,
     );

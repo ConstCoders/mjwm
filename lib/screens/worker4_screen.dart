@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:velocity_x/velocity_x.dart';
+import '../widgets/neu.dart';
 import 'login_screen.dart';
 
 class Worker4Screen extends StatefulWidget {
@@ -13,7 +15,8 @@ class Worker4Screen extends StatefulWidget {
   _Worker4ScreenState createState() => _Worker4ScreenState();
 }
 
-class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProviderStateMixin {
+class _Worker4ScreenState extends State<Worker4Screen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Map<String, dynamic>> _tasks = [];
   List<Map<String, dynamic>> _outForDeliveryTasks = [];
@@ -30,7 +33,8 @@ class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProvider
     _tabController = TabController(length: 3, vsync: this);
     currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
-      userDoc = FirebaseFirestore.instance.collection('users').doc(currentUser!.uid);
+      userDoc =
+          FirebaseFirestore.instance.collection('users').doc(currentUser!.uid);
       _loadTasks();
     } else {
       Navigator.pushReplacement(
@@ -61,7 +65,9 @@ class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProvider
       if (snapshot.exists && snapshot.data() != null) {
         var data = snapshot.data() as Map<String, dynamic>;
         if (data.containsKey('tasks')) {
-          taskIds = (data['tasks'] as List<dynamic>).map((e) => e.toString()).toList();
+          taskIds = (data['tasks'] as List<dynamic>)
+              .map((e) => e.toString())
+              .toList();
         }
       }
 
@@ -73,7 +79,9 @@ class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProvider
             .listen((taskSnapshot) {
           setState(() {
             _tasks = taskSnapshot.docs
-                .where((doc) => doc['packing'] == 'completed' && doc['dispatch'] == 'completed' && doc['delivery'] == 'pending')
+                .where((doc) =>
+            doc['packing'] == 'completed' && doc['dispatch'] == 'completed' &&
+                doc['delivery'] == 'pending')
                 .map((doc) {
               var data = doc.data() as Map<String, dynamic>;
               data['id'] = doc.id;
@@ -122,7 +130,8 @@ class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProvider
   }
 
   // Build list for Tasks Tab
-  Widget _buildTaskList(List<Map<String, dynamic>> tasks, bool isOutForDelivery, bool isDelivered) {
+  Widget _buildTaskList(List<Map<String, dynamic>> tasks, bool isOutForDelivery,
+      bool isDelivered) {
     return ListView.builder(
       itemCount: tasks.length,
       itemBuilder: (context, index) {
@@ -134,7 +143,8 @@ class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProvider
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => DeliveryDetailsPage(task: task), // Redirect to DeliveryDetailsPage
+                builder: (context) => DeliveryDetailsPage(
+                    task: task), // Redirect to DeliveryDetailsPage
               ),
             );
           }
@@ -142,9 +152,12 @@ class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProvider
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => isOutForDelivery
-                    ? OFDDetailsPage(task: task)  // Redirect to OFDDetailsPage for Out for Delivery tasks
-                    : TaskDetailsPage(task: task),  // Redirect to TaskDetailsPage for other tasks
+                builder: (context) =>
+                isOutForDelivery
+                    ? OFDDetailsPage(
+                    task: task) // Redirect to OFDDetailsPage for Out for Delivery tasks
+                    : TaskDetailsPage(
+                    task: task), // Redirect to TaskDetailsPage for other tasks
               ),
             );
           },
@@ -152,14 +165,18 @@ class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProvider
             margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.0),
+              color: Color(0xFFE0E5EC),
+              borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.4),
-                  offset: Offset(4, 4),
-                  blurRadius: 6,
-                  spreadRadius: 2,
+                  color: Colors.grey.shade600,
+                  offset: Offset(10, 10),
+                  blurRadius: 20,
+                ),
+                BoxShadow(
+                  color: Colors.white,
+                  offset: Offset(-10, -10),
+                  blurRadius: 20,
                 ),
               ],
             ),
@@ -191,11 +208,17 @@ class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProvider
                     children: [
                       Text(
                         task['taskName'] ?? 'No Task Name',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 8.0),
                       Text(
-                        "Received: ${task['timestamp'].toDate().toLocal().toString().split(' ')[0]} ${task['timestamp'].toDate().toLocal().toString().split(' ')[1].substring(0, 5)}",
+                        "Received: ${task['timestamp'].toDate()
+                            .toLocal()
+                            .toString()
+                            .split(' ')[0]} ${task['timestamp'].toDate()
+                            .toLocal().toString()
+                            .split(' ')[1].substring(0, 5)}",
                         style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                     ],
@@ -213,41 +236,131 @@ class _Worker4ScreenState extends State<Worker4Screen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            onPressed: _logout,
-            icon: Icon(Icons.logout),
+      backgroundColor: Color(0xFFE0E5EC),
+      body: DefaultTabController(
+        length: 2,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(18.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hi',
+                            style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 22,
+                                fontWeight: FontWeight.w500),
+                          ),
+                          FutureBuilder<DocumentSnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(FirebaseAuth.instance.currentUser!.uid)
+                                .get(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return CircularProgressIndicator(
+                                    color: Colors.white);
+                              }
+                              if (snapshot.hasData && snapshot.data!.exists) {
+                                String userName =
+                                    snapshot.data!['username'] ?? 'User';
+                                return Text('$userName',
+                                    style: TextStyle(
+                                        color: Colors.grey[900],
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w700));
+                              }
+                              return Text('Welcome',
+                                  style: TextStyle(fontSize: 18));
+                            },
+                          ),
+                        ],
+                      ),
+                      NeuMo(
+                        widget: IconButton(
+                            onPressed: () {},
+                            icon: Icon(
+                              Icons.notifications,
+                              size: 30,
+                              color: Colors.cyan,
+                            )),
+                        height: 60,
+                        width: 60,
+                      )
+                    ],
+                  ),
+                ),
+                NeuMo(
+                  height: 60,
+                  widget: Container(
+                    // Customize color to match the design
+                    child: TabBar(
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      controller: _tabController,
+                      indicator: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.blueAccent.shade100,
+                      ),
+                      labelColor: Colors.blue[800],
+                      labelStyle:
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      unselectedLabelColor: Colors.grey.shade600,
+                      tabs: [
+                        Tab(text: "Packages"),
+                        Tab(text: "OFD"),
+                        Tab(text: "Delivered"),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildTaskList(_tasks, false, false),
+
+                      // Out for Delivery Tab
+                      _buildTaskList(_outForDeliveryTasks, true, false),
+
+                      // Delivered Tab
+                      _buildTaskList(_deliveredTasks, false, true),
+
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-        title: Text('Worker 4 Dashboard'),
-        backgroundColor: Colors.blueAccent,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: "Tasks"),
-            Tab(text: "Out for Delivery"),
-            Tab(text: "Delivered"),
-          ],
+
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Tasks Tab
-          _buildTaskList(_tasks, false, false),
-
-          // Out for Delivery Tab
-          _buildTaskList(_outForDeliveryTasks, true, false),
-
-          // Delivered Tab
-          _buildTaskList(_deliveredTasks, false, true),
-        ],
+      floatingActionButton: NeuMo(
+        widget: IconButton(
+            onPressed: _logout,
+            icon: Icon(
+              Icons.power_settings_new_outlined,
+              size: 25,
+              color: Colors.orange,
+            )),
+        height: 60,
+        width: 60,
       ),
     );
   }
 }
-
 
 
 class TaskDetailsPage extends StatefulWidget {
@@ -271,13 +384,14 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     });
 
     try {
-      await FirebaseFirestore.instance.collection('tasks').doc(widget.task['id']).update({
+      await FirebaseFirestore.instance.collection('tasks').doc(
+          widget.task['id']).update({
         'delivery': 'outForDelivery',
-        'timestamp': FieldValue.serverTimestamp(),  // Update timestamp
+        'timestamp': FieldValue.serverTimestamp(), // Update timestamp
       });
 
       Fluttertoast.showToast(msg: 'Task marked as Out for Delivery.');
-      Navigator.pop(context);  // Go back to the previous screen
+      Navigator.pop(context); // Go back to the previous screen
     } catch (e) {
       print('Error updating task status: $e');
       Fluttertoast.showToast(msg: 'Error updating task status.');
@@ -305,23 +419,22 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Task Details'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Task Details",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 20),
+        backgroundColor: Color(0xFFE0E5EC),
+        appBar: AppBar(
+          backgroundColor: Color(0xFFE0E5EC),
+          title: Text('Task Details'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: Column(
+
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+
+                  SizedBox(height: 20),
               _buildDetailRow(
                 title: "Task Name",
                 value: widget.task['taskName'] ?? "N/A",
@@ -334,66 +447,82 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               SizedBox(height: 10),
               _buildDetailRow(
                 title: "Status",
-                value: widget.task['delivery'] == 'outForDelivery' ? "Out for Delivery" : "Pending",
+                value: widget.task['delivery'] == 'outForDelivery'
+                    ? "Out for Delivery"
+                    : "Pending",
               ),
               SizedBox(height: 20),
 
               // Show dispatch images if they exist
-              if (widget.task['dispatchImage'] != null && widget.task['dispatchImage'].isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Dispatch Images",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    _buildImageList(List<String>.from(widget.task['dispatchImage'])),
-                  ],
-                ),
-              SizedBox(height: 20),
-
-              // Show dispatch audio if it exists
-              if (widget.task['dispatchAudio'] != null)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Dispatch Audio",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () => _playAudio(widget.task['dispatchAudio']),
-                      child: Text('Play Audio'),
-                    ),
-                  ],
-                ),
-              SizedBox(height: 30),
-
-              // Out for Delivery Button
-              Center(
-                child: ElevatedButton(
-                  onPressed: _isUpdating ? null : _markAsOutForDelivery,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                  ),
-                  child: _isUpdating
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text('Mark as Out for Delivery'),
-                ),
+              if (widget.task['dispatchImage'] !=
+              null && widget.task['dispatchImage'].isNotEmpty)
+          Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Dispatch Images",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
-            ],
+            ),
+            SizedBox(height: 10),
+            _buildImageList(List<String>.from(widget.task['dispatchImage'])),
+          ],
+        ),
+        SizedBox(height: 20),
+
+        // Show dispatch audio if it exists
+        if (widget.task['dispatchAudio'] != null)
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Dispatch Audio",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
         ),
-      ),
-    );
+        SizedBox(height: 10),
+        NeuMo(
+          height: 60,
+          widget: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent, elevation: 0
+            ),
+            onPressed: () => _playAudio(widget.task['dispatchAudio']),
+            child: Text('Play Audio',
+              style: TextStyle(color: Colors.green, fontSize: 18),),
+          ),
+        ),
+      ],
+    )
+    ,
+    SizedBox(height: 30),
+
+    // Out for Delivery Button
+    Center(
+    child: NeuMo(
+    height: 60,
+    widget: ElevatedButton(
+    style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.transparent,elevation: 0
+    ),
+    onPressed: _isUpdating ? null : _markAsOutForDelivery,
+
+    child: _isUpdating
+    ? CircularProgressIndicator(color: Colors.white)
+        : Text('Mark as Out for Delivery',style: TextStyle(color: Colors.blueAccent, fontSize: 18)),
+    ),
+    ),
+
+    ),
+                    SizedBox(height: 8,)
+    ]
+    ),
+    ),
+        ));
   }
 
   Widget _buildDetailRow({required String title, required String value}) {
@@ -423,8 +552,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               borderRadius: BorderRadius.circular(8.0),
               child: Image.network(
                 imageUrl,
-                width: 100,
-                height: 100,
+                width: 300,
+                height: 300,
                 fit: BoxFit.cover,
               ),
             ),
@@ -445,7 +574,6 @@ class OFDDetailsPage extends StatefulWidget {
 }
 
 
-
 class _OFDDetailsPageState extends State<OFDDetailsPage> {
   final ImagePicker _picker = ImagePicker();
   bool _isUpdating = false;
@@ -459,19 +587,23 @@ class _OFDDetailsPageState extends State<OFDDetailsPage> {
     });
 
     try {
-      var storageRef = FirebaseStorage.instance.ref().child('images/${DateTime.now().millisecondsSinceEpoch}.png');
+      var storageRef = FirebaseStorage.instance.ref().child('images/${DateTime
+          .now()
+          .millisecondsSinceEpoch}.png');
       var uploadTask = storageRef.putFile(File(image.path));
       await uploadTask.whenComplete(() async {
         var downloadUrl = await storageRef.getDownloadURL();
 
-        await FirebaseFirestore.instance.collection('tasks').doc(widget.task['id']).update({
+        await FirebaseFirestore.instance.collection('tasks').doc(
+            widget.task['id']).update({
           'delivery': 'completed',
           'deliveredImage': downloadUrl,
-          'timestamp': FieldValue.serverTimestamp(),  // Update timestamp
+          'timestamp': FieldValue.serverTimestamp(), // Update timestamp
         });
 
-        Fluttertoast.showToast(msg: 'Delivered image captured and task marked as Delivered.');
-        Navigator.pop(context);  // Go back to the previous screen
+        Fluttertoast.showToast(
+            msg: 'Delivered image captured and task marked as Delivered.');
+        Navigator.pop(context); // Go back to the previous screen
       });
     } catch (e) {
       print('Error capturing delivered image: $e');
@@ -483,33 +615,86 @@ class _OFDDetailsPageState extends State<OFDDetailsPage> {
     });
   }
 
+  String userName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserName();
+  }
+
+  Future<void> fetchUserName() async {
+    if (widget.task['completedBy'] != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.task['completedBy'])
+          .get();
+
+      if (userDoc.exists) {
+        setState(() {
+          userName = userDoc.data()?['username'] ?? 'Unknown User';
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFE0E5EC),
       appBar: AppBar(
-        title: Text('Out for Delivery Details'),
+        backgroundColor: Color(0xFFE0E5EC),
+        title: Text('Out for Delivery Details', style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Out for Delivery Details",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Table(
+                  columnWidths: const {
+                    0: IntrinsicColumnWidth(),
+                    1: FlexColumnWidth(),
+                  },
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    _buildTableRow(
+                        'Task Name:', widget.task['taskName'] ?? 'N/A',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueAccent),
+                    _buildTableRow(
+                        'Delivery Status:', widget.task['delivery'] ?? 'N/A',
+                        color: getStatusColor(widget.task['delivery'])),
+                    _buildTableRow(
+                        'Dispatch Status:', widget.task['dispatch'] ?? 'N/A',
+                        color: getStatusColor(widget.task['dispatch'])),
+                    _buildTableRow(
+                        'Packing Status:', widget.task['packing'] ?? 'N/A',
+                        color: getStatusColor(widget.task['packing'])),
+                    _buildTableRow(
+                        'Invoice Sent:', widget.task['invoiceSend'] ?? 'N/A',
+                        color: getStatusColor(widget.task['invoiceSend'])),
+                    _buildTableRow(
+                        'Assigned To:', widget.task['assignedTo'] ?? 'N/A'),
+                    _buildTableRow('Packed By:', userName),
+                  ],
                 ),
               ),
               SizedBox(height: 16.0),
-              Text("Task Name: ${widget.task['taskName'] ?? 'N/A'}"),
-              Text("Description: ${widget.task['description'] ?? 'N/A'}"),
-              Text("Status: ${widget.task['delivery'] ?? 'N/A'}"),
-              SizedBox(height: 16.0),
+
 
               // Show dispatch images if available
-              if (widget.task['dispatchImages'] != null && (widget.task['dispatchImages'] as List).isNotEmpty)
+              if (widget.task['dispatchImage'] != null &&
+                  (widget.task['dispatchImage'] as List).isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -522,19 +707,20 @@ class _OFDDetailsPageState extends State<OFDDetailsPage> {
                     ),
                     SizedBox(height: 8.0),
                     Container(
-                      height: 200.0,
+                      height: 300.0,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: (widget.task['dispatchImages'] as List).length,
+                        itemCount: (widget.task['dispatchImage'] as List)
+                            .length,
                         itemBuilder: (context, index) {
-                          var imageUrl = widget.task['dispatchImages'][index];
+                          var imageUrl = widget.task['dispatchImage'][index];
                           return Container(
                             margin: EdgeInsets.only(right: 8.0),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8.0),
                               child: Image.network(
                                 imageUrl,
-                                width: 150,
+                                width: 300,
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -559,18 +745,107 @@ class _OFDDetailsPageState extends State<OFDDetailsPage> {
                       ),
                     ),
                     SizedBox(height: 8.0),
-                    ElevatedButton(
-                      onPressed: () => _playAudio(widget.task['dispatchAudio']),
-                      child: Text('Play Audio'),
+                    NeuMo(
+                      height: 60,
+                      widget: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFFE0E5EC), elevation: 0
+                        ),
+                        onPressed: () =>
+                            _playAudio(widget.task['dispatchAudio']),
+                        child: Text('Play Audio', style: TextStyle(
+                          fontSize: 16, color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),),
+                      ),
                     ),
                   ],
                 ),
-              SizedBox(height: 16.0),
+              SizedBox(height: 24.0),
 
-              ElevatedButton(
-                onPressed: _captureDeliveredImage,
-                child: _isUpdating ? CircularProgressIndicator() : Text('Capture Delivered Image'),
+              // Show invoice images if available
+              if (widget.task['invoiceImages'] != null &&
+                  (widget.task['invoiceImages'] as List).isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Invoice Images:",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8.0),
+                    Container(
+                      height: 200.0,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: (widget.task['invoiceImages'] as List)
+                            .length,
+                        itemBuilder: (context, index) {
+                          var imageUrl = widget.task['invoiceImages'][index];
+                          return Container(
+                            margin: EdgeInsets.only(right: 8.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: Image.network(
+                                imageUrl,
+                                width: 150,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 16.0),
+                  ],
+                ),
+
+              // Show delivered image if available
+              if (widget.task['deliveredImage'] != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Delivered Image:",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8.0),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Image.network(
+                        widget.task['deliveredImage'],
+                        height: 200.0,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    SizedBox(height: 16.0),
+                  ],
+                ),
+
+              Center(
+                child: NeuMo(
+                  height: 60,
+                  widget: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent, elevation: 0
+                    ),
+                    onPressed: _captureDeliveredImage,
+                    child: _isUpdating
+                        ? CircularProgressIndicator()
+                        : Text('Capture Delivered Image', style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold, color: Colors.blue
+                    ),),
+                  ),
+                ),
               ),
+              SizedBox(height: 12,)
             ],
           ),
         ),
@@ -593,31 +868,72 @@ class DeliveryDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFE0E5EC),
       appBar: AppBar(
-        title: Text('Delivery Details'),
+        backgroundColor: Color(0xFFE0E5EC),
+        title: Text('Delivery Details', style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Delivery Details",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16.0),
-            Text("Task Name: ${task['taskName'] ?? 'N/A'}"),
-            Text("Description: ${task['description'] ?? 'N/A'}"),
-            Text("Status: ${task['delivery'] ?? 'N/A'}"),
-            SizedBox(height: 16.0),
-            if (task['deliveredImage'] != null)
-              Image.network(task['deliveredImage']),
-          ],
-        ),
-      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+      
+          SizedBox(height: 16.0),
+          Text("Task Name: ${task['taskName'] ?? 'N/A'}", style: TextStyle(
+            fontSize: 18,color: Colors.teal,
+            fontWeight: FontWeight.bold,
+          ),),
+      
+          Text("Status: ${task['delivery'] ?? 'N/A'}", style: TextStyle(
+            fontSize: 18,color: Colors.green,
+            fontWeight: FontWeight.bold,
+          ),),
+          SizedBox(height: 16.0),
+          if (task['deliveredImage'] != null)
+            Image.network(task['deliveredImage']),
+        ],
+      ).box.margin(EdgeInsets.symmetric(horizontal: 18)).make(),
     );
   }
+}
+
+Color getStatusColor(String? status) {
+  switch (status?.toLowerCase()) {
+    case 'completed':
+      return Colors.green;
+    case 'pending':
+      return Colors.red;
+    case 'in progress':
+      return Colors.orange;
+    default:
+      return Colors.orange;
+  }
+}
+
+
+TableRow _buildTableRow(String heading, String value,
+    {Color color = Colors
+        .black, double fontSize = 16, FontWeight fontWeight = FontWeight
+        .normal}) {
+  return TableRow(
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
+          heading,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
+          value,
+          style: TextStyle(
+              color: color, fontSize: fontSize, fontWeight: fontWeight),
+        ),
+      ),
+    ],
+  );
 }

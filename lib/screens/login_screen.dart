@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mjworkmanagement/screens/payment.dart';
 import 'package:mjworkmanagement/screens/payments.dart';
+import 'package:mjworkmanagement/screens/products.dart';
+import 'package:mjworkmanagement/widgets/neu.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'register.dart';
 import 'invoice_sender_screen.dart';
@@ -18,7 +20,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
@@ -49,12 +52,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   Future<void> _login() async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userCredential.user?.uid).get();
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user?.uid)
+          .get();
       String role = userDoc['role'];
       _navigateToRoleScreen(role);
     } catch (e) {
@@ -82,6 +89,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         break;
       case 'Admin':
         roleScreen = AdminPanel();
+        break;
+      case 'Products':
+        roleScreen = ProductVideoPage();
         break;
       default:
         roleScreen = LoginScreen();
@@ -114,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFE0E5EC),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Padding(
@@ -125,7 +135,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Image.asset('assets/images/logo.jpeg', height: 100, width: 100),
+                  Image.asset('assets/images/logo.jpeg',
+                      height: 100, width: 100),
                   SizedBox(height: 50),
                   _buildCustomTextField(
                     controller: _emailController,
@@ -142,7 +153,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     prefixIcon: Icons.lock_outline,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                        _obscureText
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
                       ),
                       onPressed: () {
                         setState(() {
@@ -152,35 +165,49 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     ),
                   ),
                   SizedBox(height: 40),
-                  ElevatedButton(
-                    onPressed: _login,
-                    child: Text(
-                      'Login',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  NeuMo(
+                    height: 60,
+                    widget: ElevatedButton(
+                      onPressed: _login,
+                      child: Text(
+                        'Login',
+                        style: TextStyle(color: Colors.blueAccent, fontSize: 20,),
                       ),
-                      minimumSize: Size(double.infinity, 50), // Full width button
+                      style: ElevatedButton.styleFrom(
+                        overlayColor: Colors.blue,
+                        backgroundColor: Colors.transparent,elevation: 0,
+                        shape: RoundedRectangleBorder(
+
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        minimumSize:
+                            Size(double.infinity, 50), // Full width button
+                      ),
                     ),
                   ),
                   // SizedBox(height: 20),
-
                 ],
               ),
             ),
           ),
         ),
       ),
-      bottomNavigationBar:  Column(
+      bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text('Developed By', style: TextStyle(color: Colors.grey),),
-          Text('CoDec' ,style: TextStyle(color: Colors.grey[700],fontSize: 18,fontWeight: FontWeight.bold),),
+          Text(
+            'Developed By',
+            style: TextStyle(color: Colors.grey),
+          ),
+          Text(
+            'CoDec',
+            style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 18,
+                fontWeight: FontWeight.bold),
+          ),
         ],
       ).box.margin(EdgeInsets.symmetric(vertical: 15)).make(),
     );
@@ -195,33 +222,36 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     bool obscureText = false,
   }) {
     return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      style: TextStyle(fontSize: 16, color: Colors.black87),
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        labelStyle: TextStyle(color: Colors.blueAccent),
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.blueAccent) : null,
-        suffixIcon: suffixIcon,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(
-            color: Colors.grey.shade300,
-            width: 2.0,
+        controller: controller,
+        obscureText: obscureText,
+        style: TextStyle(fontSize: 16, color: Colors.black87),
+        decoration: InputDecoration(
+          labelText: labelText,
+          hintText: hintText,
+          labelStyle: TextStyle(color: Colors.blueAccent),
+          prefixIcon: prefixIcon != null
+              ? Icon(prefixIcon, color: Colors.blueAccent)
+              : null,
+          suffixIcon: suffixIcon,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20.0),
+            borderSide: BorderSide(
+              color: Colors.transparent,
+              width: 1.0,
+            ),
           ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(
-            color: Colors.blueAccent,
-            width: 2.0,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.0),
+            borderSide: BorderSide(
+              color: Colors.blueAccent,
+              width: 2.0,
+            ),
           ),
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          contentPadding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
         ),
-        filled: true,
-        fillColor: Colors.grey.shade100,
-        contentPadding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-      ),
+
     );
   }
 }

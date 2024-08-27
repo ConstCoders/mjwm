@@ -1,41 +1,73 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/task.dart';
 
-class TaskDetailsPage extends StatelessWidget {
+class TaskDetailsPage extends StatefulWidget {
   final Task task;
 
   const TaskDetailsPage({Key? key, required this.task}) : super(key: key);
 
   @override
+  State<TaskDetailsPage> createState() => _TaskDetailsPageState();
+}
+
+class _TaskDetailsPageState extends State<TaskDetailsPage> {
+  String userName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserName();
+  }
+
+  Future<void> fetchUserName() async {
+    if (widget.task.completedBy != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.task.completedBy)
+          .get();
+
+      if (userDoc.exists) {
+        setState(() {
+          userName = userDoc.data()?['username'] ?? 'Unknown User';
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(task.taskName ?? 'Task Details'),
+        backgroundColor: Colors.white,
+        title: Text(widget.task.taskName ?? 'Task Details',style: TextStyle(fontSize: 20,fontWeight: FontWeight.w600),),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailRow('Task Name', task.taskName),
-            _buildDetailRow('Assigned To', task.assignedTo),
-            _buildDetailRow('Completed By', task.completedBy),
-            _buildDetailRow('Invoice Send Status', task.invoiceSend),
-            _buildDetailRow('Packing Status', task.packing),
-            _buildDetailRow('Dispatch Status', task.dispatch),
-            _buildDetailRow('Delivery Status', task.delivery),
-            _buildDetailRow('Timestamp', task.timestamp.toString()),
+
+            _buildDetailRow('Assigned To', widget.task.assignedTo),
+            _buildDetailRow('Completed By', userName),
+            _buildDetailRow('Invoice Send Status', widget.task.invoiceSend),
+            _buildDetailRow('Packing Status', widget.task.packing),
+            _buildDetailRow('Dispatch Status', widget.task.dispatch),
+            _buildDetailRow('Delivery Status', widget.task.delivery),
+            _buildDetailRow('Timestamp', widget.task.timestamp.toString()),
 
             const SizedBox(height: 16),
-            _buildImagesSection('Invoice Images', task.images),
+            _buildImagesSection('Invoice Images', widget.task.images),
             const SizedBox(height: 16),
-            _buildSingleImageSection('Delivered Image', task.deliveredImage),
+            _buildSingleImageSection('Delivered Image', widget.task.deliveredImage),
             const SizedBox(height: 16),
-            _buildImagesSection('Dispatch Images', task.dispatchImage),
+            _buildImagesSection('Dispatch Images', widget.task.dispatchImage),
 
             const SizedBox(height: 16),
-            _buildAudioSection('Voice Message', task.voiceMessageUrl),
-            _buildAudioSection('Dispatch Audio', task.dispatchAudio),
+            _buildAudioSection('Voice Message', widget.task.voiceMessageUrl),
+            _buildAudioSection('Dispatch Audio', widget.task.dispatchAudio),
           ],
         ),
       ),

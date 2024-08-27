@@ -120,7 +120,7 @@ class _Worker3ScreenState extends State<Worker3Screen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-backgroundColor: Colors.white,
+backgroundColor: Color(0xFFE0E5EC),
       body: DefaultTabController(
         length: 2,
         child: SafeArea(
@@ -620,9 +620,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     var name = widget.task['taskName'];
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Color(0xFFE0E5EC),
       appBar: AppBar(
-        backgroundColor: Colors.grey[100],
+        backgroundColor: Color(0xFFE0E5EC),
         title: Text('Task Details',style: TextStyle(fontWeight: FontWeight.w500)),
       ),
       body: Padding(
@@ -721,9 +721,9 @@ class CompletedTaskDetailScreen extends StatelessWidget {
     var taskName = task['taskName'] ?? 'N/A';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFE0E5EC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFFE0E5EC),
         title: Text('Dispatched Details',style: TextStyle(fontWeight: FontWeight.w500),),
       ),
       body: Padding(

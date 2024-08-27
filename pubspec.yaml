@@ -46,7 +46,7 @@ dependencies:
   flutter_local_notifications:
   firebase_storage: ^12.1.1
   firebase_cloud_messaging_flutter:
-  fluttertoast:
+  fluttertoast: ^8.2.8
   path:
   flutter_sound: ^8.3.10
   permission_handler: ^10.2.0
@@ -54,7 +54,7 @@ dependencies:
   photo_view:
   audioplayers: ^6.0.0
   awesome_dialog:
-  flutter_neumorphic:
+
   video_player: ^2.9.1
   intl:
 

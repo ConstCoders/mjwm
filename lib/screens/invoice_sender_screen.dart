@@ -13,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:velocity_x/velocity_x.dart';
 
 import 'login_screen.dart';
 
@@ -224,24 +225,28 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
 
   Widget _buildUploadImageTab() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(0),
       child: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(height: 150,),
-            NeuMo(
-              height: 70,
-              widget: TextField(
-                controller: _taskNameController,
-                decoration: InputDecoration(
-                  labelText: 'Task Name',
-                  labelStyle: TextStyle(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 15,vertical: 15),
-                  border:InputBorder.none,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18.0),
+              child: NeuMo(
+
+                height: 70,
+                widget: TextField(
+                  controller: _taskNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Task Name',
+                    labelStyle: TextStyle(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 15,vertical: 15),
+                    border:InputBorder.none,
+                  ),
                 ),
               ),
-            ),
+            ) ,
             SizedBox(height: 20),
              Row(
          mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -280,43 +285,49 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
             SizedBox(height: 20),
             if (_uploading) CircularProgressIndicator(),
             if (_selectedImages.isNotEmpty && !_uploading)
-              NeuMo(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                child: NeuMo(
+                  height: 60,
+                  widget: ElevatedButton(
+                    onPressed: _uploadImageAndAudio,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Upload Now ',style: TextStyle(color: Colors.green[800],fontSize: 18),),
+                        Icon(Icons.cloud_upload,color: Colors.green,size: 30,)
+                      ],
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFFE0E5EC),
+                      minimumSize: Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            SizedBox(height: 150,),
+            Padding(
+              padding: const EdgeInsets.all(18.0),
+              child: NeuMo(
                 height: 60,
                 widget: ElevatedButton(
                   onPressed: _uploadImageAndAudio,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Upload Now ',style: TextStyle(color: Colors.green[800],fontSize: 18),),
-                      Icon(Icons.cloud_upload,color: Colors.green,size: 30,)
+                      Text('Logout ',style: TextStyle(color: Colors.red[800],fontSize: 18),),
+                      Icon(Icons.logout,color: Colors.red,size: 20,)
                     ],
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
+                    backgroundColor: Color(0xFFE0E5EC),
                     minimumSize: Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                  ),
-                ),
-              ),
-            SizedBox(height: 200,),
-            NeuMo(
-              height: 60,
-              widget: ElevatedButton(
-                onPressed: _uploadImageAndAudio,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Logout ',style: TextStyle(color: Colors.red[800],fontSize: 18),),
-                    Icon(Icons.logout,color: Colors.red,size: 20,)
-                  ],
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[200],
-                  minimumSize: Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
               ),
@@ -414,9 +425,9 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Color(0xFFE0E5EC),
       appBar: AppBar(
-        backgroundColor: Colors.grey[100],
+        backgroundColor: Color(0xFFE0E5EC),
         elevation: 0,
         centerTitle: true,
         title: Text('Invoice Sender',style: TextStyle(fontWeight: FontWeight.w600,),),
@@ -513,10 +524,10 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     String audioUrl = widget.invoice['audio'] ?? '';
 
     return Scaffold(
-      backgroundColor: Colors.grey[200], // Light grey background
+      backgroundColor: Color(0xFFE0E5EC), // Light grey background
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.grey[200],
+        backgroundColor: Color(0xFFE0E5EC),
         title: Text(
           'Invoice Details',
           style: TextStyle(
@@ -526,184 +537,126 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Task Name
-              Text(
-                'Task Name: ${widget.invoice['taskName']}',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent, // Colorful text
-                ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Task Name
+            Text(
+              'Task Name: ${widget.invoice['taskName']}',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent, // Colorful text
               ),
-              SizedBox(height: 10),
+            ),
+            SizedBox(height: 10),
 
-              // Timestamp without seconds
-              Text(
-                'Timestamp: ${formatTimestamp(widget.invoice['timestamp'].toDate())}',
-                style: TextStyle(fontSize: 16, color: Colors.purple),
-              ),
-              SizedBox(height: 20),
+            // Timestamp without seconds
+            Text(
+              'Timestamp: ${formatTimestamp(widget.invoice['timestamp'].toDate())}',
+              style: TextStyle(fontSize: 16, color: Colors.purple),
+            ),
+            SizedBox(height: 20),
 
-              // Status in Table Format
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade300,
-                      offset: Offset(4, 4),
-                      blurRadius: 15,
-                      spreadRadius: 1,
-                    ),
-                    BoxShadow(
-                      color: Colors.white,
-                      offset: Offset(-4, -4),
-                      blurRadius: 15,
-                      spreadRadius: 1,
-                    ),
-                  ],
+            // Status in Table Format
+            Table(
+              columnWidths: {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(3),
+              },
+              children: [
+                _buildTableRow(
+                  'Invoice Status',
+                  widget.invoice['invoiceSend'],
                 ),
-                child: Table(
-                  columnWidths: {
-                    0: FlexColumnWidth(2),
-                    1: FlexColumnWidth(3),
-                  },
-                  children: [
-                    _buildTableRow(
-                      'Invoice Status',
-                      widget.invoice['invoiceSend'],
-                    ),
-                    _buildTableRow(
-                      'Packing Status',
-                      widget.invoice['packing'],
-                    ),
-                    _buildTableRow(
-                      'Dispatch Status',
-                      widget.invoice['dispatch'],
-                    ),
-                    _buildTableRow(
-                      'Delivery Status',
-                      widget.invoice['delivery'],
-                    ),
-                  ],
+                _buildTableRow(
+                  'Packing Status',
+                  widget.invoice['packing'],
                 ),
-              ),
-              SizedBox(height: 20),
+                _buildTableRow(
+                  'Dispatch Status',
+                  widget.invoice['dispatch'],
+                ),
+                _buildTableRow(
+                  'Delivery Status',
+                  widget.invoice['delivery'],
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
 
-              // Images in Vertical List
-              Text(
-                'Images:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              images.isNotEmpty
-                  ? Column(
-                children: images.map((image) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Container(
-                      height: 200, // Larger vertical image
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            offset: Offset(4, 4),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                          ),
-                          BoxShadow(
-                            color: Colors.white,
-                            offset: Offset(-4, -4),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                          ),
-                        ],
+            // Images in Vertical List
+            Text(
+              'Images:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            images.isNotEmpty
+                ? Column(
+              children: images.map((image) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: NeuMo(
+                    height: 200,
+                    widget: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        image,
+                        fit: BoxFit.cover,
+                        height: 200,
+                        width: double.infinity,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.network(
-                          image,
-                          fit: BoxFit.cover,
-                          height: 200,
-                          width: double.infinity,
+                    ),
+                  ),
+                );
+              }).toList(),
+            )
+                : Text('No images available'),
+            SizedBox(height: 20),
+
+            // Audio Player
+            Text(
+              'Audio:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            audioUrl.isNotEmpty
+                ? Padding(
+                  padding: const EdgeInsets.all(18.0),
+                  child: NeuMo(
+                                  height: 60,
+                    widget: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            _isPlaying
+                                ? Icons.pause_circle_filled
+                                : Icons.play_circle_filled,
+                            size: 40,
+                            color: _isPlaying
+                                ? Colors.green
+                                : Colors.blueAccent,
+                          ),
+                          onPressed: () => _playAudio(audioUrl),
                         ),
-                      ),
+                        SizedBox(width: 10),
+                        Text(
+                          _isPlaying ? 'Playing...' : 'Play Audio',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                }).toList(),
-              )
-                  : Text('No images available'),
-              SizedBox(height: 20),
-
-              // Audio Player
-              Text(
-                'Audio:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              audioUrl.isNotEmpty
-                  ? Container(
-                height: 60,
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade300,
-                      offset: Offset(4, 4),
-                      blurRadius: 15,
-                      spreadRadius: 1,
-                    ),
-                    BoxShadow(
-                      color: Colors.white,
-                      offset: Offset(-4, -4),
-                      blurRadius: 15,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        _isPlaying
-                            ? Icons.pause_circle_filled
-                            : Icons.play_circle_filled,
-                        size: 40,
-                        color: _isPlaying
-                            ? Colors.green
-                            : Colors.blueAccent,
-                      ),
-                      onPressed: () => _playAudio(audioUrl),
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      _isPlaying ? 'Playing...' : 'Play Audio',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.black,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-                  : Text('No audio available'),
-            ],
-          ),
-        ),
+                  ),
+                )
+                : Text('No audio available'),
+          ],
+        ).box.margin(EdgeInsets.symmetric(horizontal: 18)).make(),
       ),
     );
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mjworkmanagement/widgets/neu.dart';
+import 'package:velocity_x/velocity_x.dart';
 import '../models/task.dart';
 import '../screens/task_details_screen.dart';
 
@@ -18,22 +20,25 @@ class TaskProgressTracker extends StatelessWidget {
           ),
         );
       },
-      child: Card(
-        elevation: 3,
-        margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+      child: NeuMo(
+        height: 250,
+        widget: Card(
+          elevation: 0,
+          // margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                title: Text('Task: ${task.taskName ?? task.id}', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Timestamp: ${task.timestamp}'),
+              ),
+              _buildTaskTable(),
+            ],
+          ),
         ),
-        child: Column(
-          children: [
-            ListTile(
-              title: Text('Task: ${task.taskName ?? task.id}', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('Timestamp: ${task.timestamp}'),
-            ),
-            _buildTaskTable(),
-          ],
-        ),
-      ),
+      ).box.margin(EdgeInsets.all(15)).make(),
     );
   }
 
