@@ -672,7 +672,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   widget: IconButton(
 
 
-                    onPressed: _isRecording ? _stopRecording : _startRecording,
+                    onPressed: _isRecording ? _stopRecording : _startRecording
+
+                    ,
                     icon: Icon(_isRecording ? Icons.stop_circle : Icons.mic,size: 30,color: Colors.teal,),
                   ),
                 ),

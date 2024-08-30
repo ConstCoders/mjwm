@@ -10,6 +10,7 @@ import 'package:mjworkmanagement/screens/products.dart';
 import 'package:mjworkmanagement/screens/register.dart';
 import 'package:mjworkmanagement/screens/login_screen.dart';
 import 'package:mjworkmanagement/models/task.dart';
+import 'package:mjworkmanagement/screens/status.dart';
 import 'package:mjworkmanagement/widgets/task_progress_tracker.dart';
 import 'package:mjworkmanagement/screens/task_details_screen.dart';
 
@@ -142,22 +143,23 @@ class _AdminPanelState extends State<AdminPanel> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Panel'),
-        backgroundColor: Colors.blueAccent,
+        title: Text('Admin Panel', style: TextStyle(fontWeight: FontWeight.w600),),
+        backgroundColor: Color(0xFFE0E5EC),
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
+
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color:Colors.grey[900],
               ),
               child: Text(
                 'Admin Panel',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 24,fontWeight: FontWeight.bold
                 ),
               ),
             ),
@@ -199,7 +201,7 @@ class _AdminPanelState extends State<AdminPanel> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => UserListPage(),
+                    builder: (context) => TaskStatusPage(),
                   ),
                 );
               },
@@ -224,48 +226,7 @@ class _AdminPanelState extends State<AdminPanel> {
           ? Center(child: CircularProgressIndicator()) // Show loading indicator
           : tasks.isEmpty
           ? Center(child: Text('No tasks available')) // Show this if no tasks are loaded
-          : Column(
-            children: [
-              // Container(
-              //   height: 100,
-              //   padding: EdgeInsets.symmetric(vertical: 10),
-              //   color: Colors.grey[200],
-              //   child: SingleChildScrollView(
-              //     scrollDirection: Axis.horizontal,
-              //     child: Row(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         _buildFilterButton('Today'),
-              //         _buildFilterButton('7 Days'),
-              //         _buildFilterButton('28 Days'),
-              //         _buildFilterButton('All Time'),
-              //       ],
-              //     ),
-              //   ),
-              // ),
-              Expanded(
-                child: ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                        itemCount: tasks.length,
-                        itemBuilder: (context, index) {
-                Task task = tasks[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TaskDetailsPage(task: task),
-                      ),
-                    );
-                  },
-                  child: TaskProgressTracker(task: task),
-                );
-                        },
-                      ),
-              ),
-            ],
-          ),
+          : TaskStatusPage(),
     );
   }
   // Helper method to create filter buttons

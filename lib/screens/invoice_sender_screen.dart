@@ -34,6 +34,14 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
 
   final ImagePicker _picker = ImagePicker();
 
+  void _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -52,14 +60,6 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
         gravity: ToastGravity.BOTTOM,
       );
     }
-  }
-
-  Future<void> _logout() async {
-    await FirebaseAuth.instance.signOut();
-    Navigator.pushReplacement(
-      context as BuildContext,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-    );
   }
 
   Future<void> _chooseImages() async {
@@ -230,58 +230,58 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: 150,),
+            SizedBox(
+              height: 150,
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18.0),
               child: NeuMo(
-
                 height: 70,
                 widget: TextField(
                   controller: _taskNameController,
                   decoration: InputDecoration(
                     labelText: 'Task Name',
                     labelStyle: TextStyle(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 15,vertical: 15),
-                    border:InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                    border: InputBorder.none,
                   ),
                 ),
               ),
-            ) ,
+            ),
             SizedBox(height: 20),
-             Row(
-         mainAxisAlignment: MainAxisAlignment.spaceAround,
-         children: [
-           NeuMo(
-             height: 60,
-             widget: IconButton(
-               icon: Icon(Icons.image
-                   , size: 30, color: Colors.teal[300]),
-               onPressed: _chooseImages,
-               padding: EdgeInsets.all(16), // Adjust as needed
-             ),
-           ),
-        
-           SizedBox(height: 20),
-           if (_isRecording)
-             NeuMo(
-               height: 60,
-               widget: IconButton(
-                 icon: Icon(Icons.stop, size: 30, color: Colors.red),
-                 onPressed: _stopRecording,
-                 padding: EdgeInsets.all(16), // Adjust as needed
-               ),
-             )
-           else
-             NeuMo(
-               height: 60,
-               widget: IconButton(
-                 icon: Icon(Icons.mic, size: 30, color: Colors.blue),
-                 onPressed: _startRecording,
-                 padding: const EdgeInsets.all(16), // Adjust as needed
-               ),
-             ),
-         ],
-             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                NeuMo(
+                  height: 60,
+                  widget: IconButton(
+                    icon: Icon(Icons.image, size: 30, color: Colors.teal[300]),
+                    onPressed: _chooseImages,
+                    padding: EdgeInsets.all(16), // Adjust as needed
+                  ),
+                ),
+                SizedBox(height: 20),
+                if (_isRecording)
+                  NeuMo(
+                    height: 60,
+                    widget: IconButton(
+                      icon: Icon(Icons.stop, size: 30, color: Colors.red),
+                      onPressed: _stopRecording,
+                      padding: EdgeInsets.all(16), // Adjust as needed
+                    ),
+                  )
+                else
+                  NeuMo(
+                    height: 60,
+                    widget: IconButton(
+                      icon: Icon(Icons.mic, size: 30, color: Colors.blue),
+                      onPressed: _startRecording,
+                      padding: const EdgeInsets.all(16), // Adjust as needed
+                    ),
+                  ),
+              ],
+            ),
             SizedBox(height: 20),
             if (_uploading) CircularProgressIndicator(),
             if (_selectedImages.isNotEmpty && !_uploading)
@@ -294,8 +294,16 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Upload Now ',style: TextStyle(color: Colors.green[800],fontSize: 18),),
-                        Icon(Icons.cloud_upload,color: Colors.green,size: 30,)
+                        Text(
+                          'Upload Now ',
+                          style:
+                              TextStyle(color: Colors.green[800], fontSize: 18),
+                        ),
+                        Icon(
+                          Icons.cloud_upload,
+                          color: Colors.green,
+                          size: 30,
+                        )
                       ],
                     ),
                     style: ElevatedButton.styleFrom(
@@ -308,18 +316,27 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
                   ),
                 ),
               ),
-            SizedBox(height: 150,),
+            SizedBox(
+              height: 150,
+            ),
             Padding(
               padding: const EdgeInsets.all(18.0),
               child: NeuMo(
                 height: 60,
                 widget: ElevatedButton(
-                  onPressed: _uploadImageAndAudio,
+                  onPressed: () => _logout,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Logout ',style: TextStyle(color: Colors.red[800],fontSize: 18),),
-                      Icon(Icons.logout,color: Colors.red,size: 20,)
+                      Text(
+                        'Logout ',
+                        style: TextStyle(color: Colors.red[800], fontSize: 18),
+                      ),
+                      Icon(
+                        Icons.logout,
+                        color: Colors.red,
+                        size: 20,
+                      )
                     ],
                   ),
                   style: ElevatedButton.styleFrom(
@@ -336,7 +353,6 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
         ),
       ),
     );
-
   }
 
   Widget _buildSentImagesTab() {
@@ -363,7 +379,10 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
               child: NeuMo(
                 height: 90,
                 widget: ListTile(
-                  title: Text(task['taskName'],style: TextStyle(fontWeight: FontWeight.bold),),
+                  title: Text(
+                    task['taskName'],
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text('Uploaded on ${task['timestamp'].toDate()}'),
                   leading: images.isNotEmpty
                       ? Image.network(images[0],
@@ -389,21 +408,24 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
                           builder: (BuildContext context) {
                             return AlertDialog(
                               title: Text('Delete Task'),
-                              content:
-                                  Text('Are you sure you want to delete this task?'),
+                              content: Text(
+                                  'Are you sure you want to delete this task?'),
                               actions: [
                                 TextButton(
                                   child: Text('Cancel'),
                                   onPressed: () {
-                                    Navigator.of(context).pop(); // Close the dialog
+                                    Navigator.of(context)
+                                        .pop(); // Close the dialog
                                   },
                                 ),
                                 TextButton(
                                   child: Text('Delete'),
                                   onPressed: () {
                                     // Perform the delete operation
-                                    deleteTask(task.id); // Pass the task ID to delete
-                                    Navigator.of(context).pop(); // Close the dialog
+                                    deleteTask(
+                                        task.id); // Pass the task ID to delete
+                                    Navigator.of(context)
+                                        .pop(); // Close the dialog
                                   },
                                 ),
                               ],
@@ -430,7 +452,12 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
         backgroundColor: Color(0xFFE0E5EC),
         elevation: 0,
         centerTitle: true,
-        title: Text('Invoice Sender',style: TextStyle(fontWeight: FontWeight.w600,),),
+        title: Text(
+          'Invoice Sender',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
@@ -442,9 +469,9 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
               text: 'Sent Images',
               icon: Icon(Icons.photo_library),
             ),
-          ],indicatorSize: TabBarIndicatorSize.tab,
+          ],
+          indicatorSize: TabBarIndicatorSize.tab,
           indicator: BoxDecoration(
-
             color: Colors.blueAccent,
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
@@ -461,8 +488,6 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
           labelStyle: TextStyle(fontWeight: FontWeight.bold),
           unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal),
         ),
-
-
       ),
       body: TabBarView(
         controller: _tabController,
@@ -514,6 +539,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
       });
     }
   }
+
   String formatTimestamp(DateTime dateTime) {
     return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
   }
@@ -594,24 +620,24 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
             SizedBox(height: 10),
             images.isNotEmpty
                 ? Column(
-              children: images.map((image) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: NeuMo(
-                    height: 200,
-                    widget: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        image,
-                        fit: BoxFit.cover,
-                        height: 200,
-                        width: double.infinity,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            )
+                    children: images.map((image) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: NeuMo(
+                          height: 200,
+                          widget: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.network(
+                              image,
+                              fit: BoxFit.cover,
+                              height: 200,
+                              width: double.infinity,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  )
                 : Text('No images available'),
             SizedBox(height: 20),
 
@@ -623,37 +649,36 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
             SizedBox(height: 10),
             audioUrl.isNotEmpty
                 ? Padding(
-                  padding: const EdgeInsets.all(18.0),
-                  child: NeuMo(
-                                  height: 60,
-                    widget: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            _isPlaying
-                                ? Icons.pause_circle_filled
-                                : Icons.play_circle_filled,
-                            size: 40,
-                            color: _isPlaying
-                                ? Colors.green
-                                : Colors.blueAccent,
+                    padding: const EdgeInsets.all(18.0),
+                    child: NeuMo(
+                      height: 60,
+                      widget: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              _isPlaying
+                                  ? Icons.pause_circle_filled
+                                  : Icons.play_circle_filled,
+                              size: 40,
+                              color:
+                                  _isPlaying ? Colors.green : Colors.blueAccent,
+                            ),
+                            onPressed: () => _playAudio(audioUrl),
                           ),
-                          onPressed: () => _playAudio(audioUrl),
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          _isPlaying ? 'Playing...' : 'Play Audio',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
+                          SizedBox(width: 10),
+                          Text(
+                            _isPlaying ? 'Playing...' : 'Play Audio',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                )
+                  )
                 : Text('No audio available'),
           ],
         ).box.margin(EdgeInsets.symmetric(horizontal: 18)).make(),
@@ -663,7 +688,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
 
   TableRow _buildTableRow(String label, String status) {
     Color statusColor =
-    status.toLowerCase() == 'completed' ? Colors.green : Colors.red;
+        status.toLowerCase() == 'completed' ? Colors.green : Colors.red;
 
     return TableRow(
       children: [
@@ -692,5 +717,4 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
       ],
     );
   }
-  }
-
+}
