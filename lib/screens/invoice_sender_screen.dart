@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -33,11 +32,11 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
   TextEditingController _taskNameController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
-
-  void _logout(BuildContext context) async {
+  @override
+  void _logout() async {
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacement(
-      context,
+      context as BuildContext,
       MaterialPageRoute(builder: (context) => LoginScreen()),
     );
   }
@@ -51,16 +50,80 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
   }
 
   Future<void> _initializeRecorder() async {
-    await _recorder!.openAudioSession();
-    var status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
+    try {
+      var status = await Permission.microphone.request();
+      if (status != PermissionStatus.granted) {
+        Fluttertoast.showToast(
+          msg: 'Microphone permission is required to record audio.',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+        return;
+      }
+
+      await _recorder!.openRecorder();
+
       Fluttertoast.showToast(
-        msg: 'Microphone permission is required to record audio.',
+        msg: 'Recorder initialized successfully.',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: 'Failed to initialize the recorder: $e',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
       );
     }
   }
+
+  void _toggleRecording() async {
+    if (_isRecording) {
+      // Stop recording
+      await _recorder!.stopRecorder();
+      setState(() {
+        _isRecording = false;
+      });
+      Fluttertoast.showToast(
+        msg: "Recording stopped",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } else {
+      // Start recording
+      Directory tempDir = await getTemporaryDirectory();
+      String filePath = '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.aac';
+      await _recorder!.startRecorder(
+        toFile: filePath,
+      );
+      setState(() {
+        _isRecording = true;
+        _recordedFilePath = filePath;
+      });
+      Fluttertoast.showToast(
+        msg: 'Recording started',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    }
+  }
+
+  void _stopRecording() async {
+    if (_isRecording) {
+      await _recorder!.stopRecorder();
+      setState(() {
+        _isRecording = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _recorder?.closeRecorder(); // Close the recorder if it is open
+    _recorder = null; // Clean up the recorder instance
+    super.dispose();
+  }
+
 
   Future<void> _chooseImages() async {
     try {
@@ -188,40 +251,10 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
     );
   }
 
-  void _startRecording() async {
-    if (await Permission.microphone.request().isGranted) {
-      String path =
-          '${(await getTemporaryDirectory()).path}/${DateTime.now().millisecondsSinceEpoch}.aac';
-      await _recorder!.startRecorder(
-        toFile: path,
-        codec: Codec.aacADTS,
-      );
-      setState(() {
-        _isRecording = true;
-        _recordedFilePath = path;
-      });
-    } else {
-      Fluttertoast.showToast(
-        msg: 'Microphone permission is required to record audio.',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-      );
-    }
-  }
 
-  void _stopRecording() async {
-    await _recorder!.stopRecorder();
-    setState(() {
-      _isRecording = false;
-    });
-  }
 
-  @override
-  void dispose() {
-    _recorder!.closeAudioSession();
-    _recorder = null;
-    super.dispose();
-  }
+
+
 
   Widget _buildUploadImageTab() {
     return Padding(
@@ -276,7 +309,7 @@ class _InvoiceSenderScreenState extends State<InvoiceSenderScreen>
                     height: 60,
                     widget: IconButton(
                       icon: Icon(Icons.mic, size: 30, color: Colors.blue),
-                      onPressed: _startRecording,
+                      onPressed: _toggleRecording,
                       padding: const EdgeInsets.all(16), // Adjust as needed
                     ),
                   ),

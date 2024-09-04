@@ -6,9 +6,11 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../widgets/neu.dart';
 import 'login_screen.dart';
 
@@ -17,7 +19,8 @@ class Worker3Screen extends StatefulWidget {
   _Worker3ScreenState createState() => _Worker3ScreenState();
 }
 
-class _Worker3ScreenState extends State<Worker3Screen> with SingleTickerProviderStateMixin {
+class _Worker3ScreenState extends State<Worker3Screen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   late String currentUserId;
@@ -35,21 +38,26 @@ class _Worker3ScreenState extends State<Worker3Screen> with SingleTickerProvider
     _initializeRecorder();
   }
 
+  Future<void> _initializeRecorder() async {
+    await _recorder.openRecorder();
+    _recorder.setSubscriptionDuration(Duration(milliseconds: 10));
+  }
+
   Future<void> _initializeNotifications() async {
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('app_icon');
+        AndroidInitializationSettings('app_icon');
 
     final InitializationSettings initializationSettings =
-    InitializationSettings(android: initializationSettingsAndroid);
+        InitializationSettings(android: initializationSettingsAndroid);
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
   Future<void> _showNotification(String title, String body) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
+        AndroidNotificationDetails(
       'your channel id',
       'your channel name',
       importance: Importance.max,
@@ -58,7 +66,7 @@ class _Worker3ScreenState extends State<Worker3Screen> with SingleTickerProvider
     );
 
     const NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics);
+        NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.show(
       0,
@@ -81,17 +89,6 @@ class _Worker3ScreenState extends State<Worker3Screen> with SingleTickerProvider
     setState(() {
       currentUserId = currentUser.uid;
     });
-  }
-
-  Future<void> _initializeRecorder() async {
-    await _recorder.openAudioSession();
-    _recorder.setSubscriptionDuration(Duration(milliseconds: 10));
-  }
-
-  @override
-  void dispose() {
-    _recorder.closeAudioSession();
-    super.dispose();
   }
 
   Future<void> _startRecording(String taskId) async {
@@ -118,9 +115,15 @@ class _Worker3ScreenState extends State<Worker3Screen> with SingleTickerProvider
   }
 
   @override
+  void dispose() {
+    _recorder.closeRecorder();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-backgroundColor: Color(0xFFE0E5EC),
+      backgroundColor: Color(0xFFE0E5EC),
       body: DefaultTabController(
         length: 2,
         child: SafeArea(
@@ -197,7 +200,7 @@ backgroundColor: Color(0xFFE0E5EC),
                       ),
                       labelColor: Colors.blue[800],
                       labelStyle:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                       unselectedLabelColor: Colors.grey.shade600,
                       tabs: [
                         Tab(
@@ -238,6 +241,7 @@ backgroundColor: Color(0xFFE0E5EC),
       ),
     );
   }
+
   Widget _buildTaskList(String tabType) {
     Stream<QuerySnapshot> stream;
     if (tabType == 'Packages') {
@@ -245,12 +249,14 @@ backgroundColor: Color(0xFFE0E5EC),
           .collection('tasks')
           .where('packing', isEqualTo: 'completed')
           .where('dispatch', isEqualTo: 'pending')
+          .orderBy('timestamp', descending: true)
           .snapshots();
     } else {
       stream = FirebaseFirestore.instance
           .collection('tasks')
           .where('packing', isEqualTo: 'completed')
           .where('dispatch', isEqualTo: 'completed')
+          .orderBy('timestamp', descending: true)
           .snapshots();
     }
 
@@ -278,41 +284,43 @@ backgroundColor: Color(0xFFE0E5EC),
                 widget: ListTile(
                   leading: task['images'] != null && task['images'].length > 0
                       ? GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FullImageScreen(
-                            imageUrls: List<String>.from(task['images']),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FullImageScreen(
+                                  imageUrls: List<String>.from(task['images']),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            child: Image.network(
+                              task['images'][0],
+                              // Display the first image as a preview
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      child: Image.network(
-                        task['images'][0], // Display the first image as a preview
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  )
+                        )
                       : null,
                   subtitle: Text(DateFormat('yyyy-MM-dd HH:mm')
                       .format(task['timestamp'].toDate())),
-                  title: Text(task['taskName'], style: TextStyle(fontSize: 18,fontWeight: FontWeight.w500)),
+                  title: Text(task['taskName'],
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => tabType == 'Packages'
                             ? TaskDetailScreen(task: task) // Pass dynamic task
-                            : CompletedTaskDetailScreen(task: task), // Pass dynamic task
+                            : CompletedTaskDetailScreen(
+                                task: task), // Pass dynamic task
                       ),
                     );
                   },
-
-
                 ),
               ),
             );
@@ -321,7 +329,6 @@ backgroundColor: Color(0xFFE0E5EC),
       },
     );
   }
-
 
   Future<void> _assignTaskToWorker4(String taskId) async {
     User? assignedUser;
@@ -386,9 +393,11 @@ backgroundColor: Color(0xFFE0E5EC),
           String filePath =
               'voice_messages/${DateTime.now().millisecondsSinceEpoch}.aac';
           File voiceMessageFile = File(_voiceMessagePathMap[taskId]!);
-          await FirebaseStorage.instance.ref(filePath).putFile(voiceMessageFile);
+          await FirebaseStorage.instance
+              .ref(filePath)
+              .putFile(voiceMessageFile);
           String downloadUrl =
-          await FirebaseStorage.instance.ref(filePath).getDownloadURL();
+              await FirebaseStorage.instance.ref(filePath).getDownloadURL();
 
           await FirebaseFirestore.instance
               .collection('tasks')
@@ -407,6 +416,7 @@ backgroundColor: Color(0xFFE0E5EC),
 
 class FullImageScreen extends StatelessWidget {
   final List<String> imageUrls;
+
   FullImageScreen({required this.imageUrls});
 
   @override
@@ -434,10 +444,6 @@ class FullImageScreen extends StatelessWidget {
   }
 }
 
-
-
-
-
 class TaskDetailScreen extends StatefulWidget {
   final dynamic task;
 
@@ -453,19 +459,81 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   bool _isRecording = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _initializeRecorder();
+  void _toggleRecording() async {
+    try {
+      if (_isRecording) {
+        // Stop recording
+        await _recorder.stopRecorder();
+        setState(() {
+          _isRecording = false;
+        });
+        Fluttertoast.showToast(
+          msg: "Recording stopped",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      } else {
+        // Ensure that the recorder is initialized
+        if (!_recorder.isRecording) {
+          await _recorder.openRecorder();
+        }
+
+        // Request microphone permission before starting
+        var status = await Permission.microphone.request();
+        if (status != PermissionStatus.granted) {
+          Fluttertoast.showToast(
+            msg: "Microphone permission not granted",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+          );
+          return;
+        }
+
+        // Start recording
+        Directory tempDir = await getTemporaryDirectory();
+        String filePath =
+            '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.aac';
+
+        await _recorder.startRecorder(
+          toFile: filePath,
+          codec: Codec.aacADTS,
+        );
+
+        setState(() {
+          _isRecording = true;
+          _audioFilePath = filePath;
+        });
+
+        Fluttertoast.showToast(
+          msg: 'Recording started',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
+    } catch (e) {
+      // Catch and display any errors
+      print("Error during recording: $e");
+      Fluttertoast.showToast(
+        msg: "Recording failed: $e",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    }
   }
 
-  Future<void> _initializeRecorder() async {
-    await _recorder.openAudioSession();
+  void _stopRecording() async {
+    if (_isRecording) {
+      await _recorder!.stopRecorder();
+      setState(() {
+        _isRecording = false;
+      });
+    }
   }
 
   @override
   void dispose() {
-    _recorder.closeAudioSession();
+    _recorder.closeRecorder(); // Close the recorder if it is open
+    // Clean up the recorder instance
     super.dispose();
   }
 
@@ -479,28 +547,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
-  Future<void> _startRecording() async {
-    Directory tempDir = await getTemporaryDirectory();
-    String tempPath = '${tempDir.path}/dispatch_audio.aac';
-
-    await _recorder.startRecorder(
-      toFile: tempPath,
-      codec: Codec.aacADTS,
-    );
-
-    setState(() {
-      _isRecording = true;
-      _audioFilePath = tempPath;
-    });
-  }
-
-  Future<void> _stopRecording() async {
-    await _recorder.stopRecorder();
-    setState(() {
-      _isRecording = false;
-    });
-  }
-
   Future<void> _uploadImagesAndAudio(String taskId) async {
     List<String> imageUrls = [];
 
@@ -510,7 +556,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           'dispatch_images/$taskId/${DateTime.now().millisecondsSinceEpoch}.jpg';
       await FirebaseStorage.instance.ref(filePath).putFile(image);
       String downloadUrl =
-      await FirebaseStorage.instance.ref(filePath).getDownloadURL();
+          await FirebaseStorage.instance.ref(filePath).getDownloadURL();
       imageUrls.add(downloadUrl);
     }
 
@@ -522,7 +568,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       File audioFile = File(_audioFilePath!);
       await FirebaseStorage.instance.ref(audioFilePath).putFile(audioFile);
       audioUrl =
-      await FirebaseStorage.instance.ref(audioFilePath).getDownloadURL();
+          await FirebaseStorage.instance.ref(audioFilePath).getDownloadURL();
     }
 
     // Update task document with dispatch images and audio
@@ -623,7 +669,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       backgroundColor: Color(0xFFE0E5EC),
       appBar: AppBar(
         backgroundColor: Color(0xFFE0E5EC),
-        title: Text('Task Details',style: TextStyle(fontWeight: FontWeight.w500)),
+        title:
+            Text('Task Details', style: TextStyle(fontWeight: FontWeight.w500)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -651,7 +698,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 ),
               ),
             SizedBox(height: 16),
-            Text('Task Name: $name',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 18,color: Colors.blueAccent)),
+            Text('Task Name: $name',
+                style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    color: Colors.blueAccent)),
             // SizedBox(height: 8),
             // Text('Assigned To: ${widget.task['assignedTo'] ?? 'N/A'}'),
             SizedBox(height: 16),
@@ -659,35 +710,41 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 NeuMo(
-                  height: 60,width: 60,
+                  height: 60,
+                  width: 60,
                   widget: IconButton(
-
-
                     onPressed: _captureImages,
-                    icon: Icon(Icons.image,size: 30,color: Colors.orange,),
+                    icon: Icon(
+                      Icons.image,
+                      size: 30,
+                      color: Colors.orange,
+                    ),
                   ),
                 ),
                 NeuMo(
-                  height: 60,width: 60,
+                  height: 60,
+                  width: 60,
                   widget: IconButton(
-
-
-                    onPressed: _isRecording ? _stopRecording : _startRecording
-
-                    ,
-                    icon: Icon(_isRecording ? Icons.stop_circle : Icons.mic,size: 30,color: Colors.teal,),
+                    onPressed: _toggleRecording,
+                    icon: Icon(
+                      _isRecording ? Icons.stop_circle : Icons.mic,
+                      size: 30,
+                      color: Colors.teal,
+                    ),
                   ),
                 ),
                 NeuMo(
-                  height: 60,width: 60,
+                  height: 60,
+                  width: 60,
                   widget: IconButton(
-
-
-    onPressed: () => _assignTaskToWorker4(taskId),
-                    icon: Icon(Icons.send,size: 30,color: Colors.lightGreen,),
+                    onPressed: () => _assignTaskToWorker4(taskId),
+                    icon: Icon(
+                      Icons.send,
+                      size: 30,
+                      color: Colors.lightGreen,
+                    ),
                   ),
                 ),
-
               ],
             ),
             SizedBox(height: 16),
@@ -695,19 +752,21 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               Wrap(
                 spacing: 8,
                 children: _capturedImages
-                    .map((image) => Image.file(image, height: 100,width: 100,fit: BoxFit.cover,))
+                    .map((image) => Image.file(
+                          image,
+                          height: 100,
+                          width: 100,
+                          fit: BoxFit.cover,
+                        ))
                     .toList(),
               ),
             SizedBox(height: 16),
-
           ],
         ),
       ),
     );
   }
 }
-
-
 
 class CompletedTaskDetailScreen extends StatelessWidget {
   final dynamic task;
@@ -726,43 +785,57 @@ class CompletedTaskDetailScreen extends StatelessWidget {
       backgroundColor: Color(0xFFE0E5EC),
       appBar: AppBar(
         backgroundColor: Color(0xFFE0E5EC),
-        title: Text('Dispatched Details',style: TextStyle(fontWeight: FontWeight.w500),),
+        title: Text(
+          'Dispatched Details',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Task Name: $taskName'
-                '',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 18,color: Colors.teal)),
+            Text(
+                'Task Name: $taskName'
+                '',
+                style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    color: Colors.teal)),
             SizedBox(height: 8),
-            Text('Assigned To: $assignedTo',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 18,color: Colors.blueAccent)),
+            Text('Assigned To: $assignedTo',
+                style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    color: Colors.blueAccent)),
             SizedBox(height: 16),
             if (imageUrls.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Dispatch Images:', style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16)),
+                  Text('Dispatch Images:',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     children: imageUrls
                         .map((imageUrl) => GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                FullImageScreen(imageUrls: imageUrls),
-                          ),
-                        );
-                      },
-                      child: Image.network(
-                        imageUrl,
-                        height: 100,
-                        fit: BoxFit.cover,
-                      ),
-                    ))
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        FullImageScreen(imageUrls: imageUrls),
+                                  ),
+                                );
+                              },
+                              child: Image.network(
+                                imageUrl,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            ))
                         .toList(),
                   ),
                 ],
@@ -772,7 +845,9 @@ class CompletedTaskDetailScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Dispatch Audio:', style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16)),
+                  Text('Dispatch Audio:',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   SizedBox(height: 12),
                   AudioPlayerWidget(audioUrl: audioUrl),
                 ],
@@ -824,7 +899,11 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
             onPressed: _togglePlayPause,
           ),
-          Text(isPlaying ? 'Pause' : 'Play',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 18,color: Colors.green)),
+          Text(isPlaying ? 'Pause' : 'Play',
+              style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 18,
+                  color: Colors.green)),
         ],
       ),
     );
