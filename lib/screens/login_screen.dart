@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mjworkmanagement/screens/Invoice.dart';
 import 'package:mjworkmanagement/screens/payment.dart';
 import 'package:mjworkmanagement/screens/payments.dart';
 import 'package:mjworkmanagement/screens/products.dart';
@@ -73,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen>
     Widget roleScreen;
     switch (role) {
       case 'Invoice':
-        roleScreen = InvoiceSenderScreen();
+        roleScreen = TaskUploaderScreen();
         break;
       case 'Worker2':
         roleScreen = Worker2Screen();

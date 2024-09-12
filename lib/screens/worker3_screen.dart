@@ -247,7 +247,7 @@ class _Worker3ScreenState extends State<Worker3Screen>
     if (tabType == 'Packages') {
       stream = FirebaseFirestore.instance
           .collection('tasks')
-          .where('packing', isEqualTo: 'completed')
+          .where('packing', isEqualTo: 'done')
           .where('dispatch', isEqualTo: 'pending')
           .orderBy('timestamp', descending: true)
           .snapshots();
@@ -282,14 +282,13 @@ class _Worker3ScreenState extends State<Worker3Screen>
               child: NeuMo(
                 height: 70,
                 widget: ListTile(
-                  leading: task['images'] != null && task['images'].length > 0
-                      ? GestureDetector(
+                  leading: GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => FullImageScreen(
-                                  imageUrls: List<String>.from(task['images']),
+                                  imageUrls:task['image'],
                                 ),
                               ),
                             );
@@ -298,13 +297,13 @@ class _Worker3ScreenState extends State<Worker3Screen>
                             width: 50,
                             height: 50,
                             child: Image.network(
-                              task['images'][0],
+                              task['image'],
                               // Display the first image as a preview
                               fit: BoxFit.cover,
                             ),
                           ),
                         )
-                      : null,
+                      ,
                   subtitle: Text(DateFormat('yyyy-MM-dd HH:mm')
                       .format(task['timestamp'].toDate())),
                   title: Text(task['taskName'],
@@ -415,7 +414,7 @@ class _Worker3ScreenState extends State<Worker3Screen>
 }
 
 class FullImageScreen extends StatelessWidget {
-  final List<String> imageUrls;
+  final String imageUrls;
 
   FullImageScreen({required this.imageUrls});
 
@@ -426,20 +425,17 @@ class FullImageScreen extends StatelessWidget {
         title: Text('Full Images'),
       ),
       body: Center(
-        child: ListView.builder(
-          itemCount: imageUrls.length,
-          itemBuilder: (context, index) {
-            return Padding(
+        child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Image.network(
-                imageUrls[index],
+                imageUrls,
                 height: 200,
                 fit: BoxFit.cover,
               ),
-            );
-          },
+            ),
+
         ),
-      ),
+
     );
   }
 }
@@ -635,7 +631,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             .collection('tasks')
             .doc(taskId)
             .update({
-          'dispatch': 'completed',
+          'dispatch': 'done',
           'assignedTo': selectedUserName,
         });
 
@@ -661,7 +657,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var imageUrls = List<String>.from(widget.task['images'] ?? []);
+    var imageUrls =widget.task['image'] ;
     var taskId = widget.task.id;
     var name = widget.task['taskName'];
 
@@ -692,7 +688,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   width: double.infinity,
                   height: 200,
                   child: Image.network(
-                    imageUrls[0], // Show first image as preview
+                    imageUrls, // Show first image as preview
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -819,24 +815,24 @@ class CompletedTaskDetailScreen extends StatelessWidget {
                   SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: imageUrls
-                        .map((imageUrl) => GestureDetector(
+                    children:[
+                      GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        FullImageScreen(imageUrls: imageUrls),
+                                        FullImageScreen(imageUrls: imageUrls as String),
                                   ),
                                 );
                               },
                               child: Image.network(
-                                imageUrl,
+                                imageUrls as String,
                                 height: 100,
                                 fit: BoxFit.cover,
                               ),
-                            ))
-                        .toList(),
+                            )
+                        ]
                   ),
                 ],
               ),
