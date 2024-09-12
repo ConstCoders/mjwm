@@ -1,13 +1,20 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:mjworkmanagement/widgets/neu.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+import '../main.dart';
 import 'login_screen.dart';
 
 class Worker2Screen extends StatefulWidget {
@@ -21,6 +28,8 @@ class _Worker2ScreenState extends State<Worker2Screen>
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   late String currentUserId;
   late AudioPlayer audioPlayer;
+  File? _videoFile;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -29,6 +38,26 @@ class _Worker2ScreenState extends State<Worker2Screen>
     _initializeNotifications();
     _loadCurrentUser();
     audioPlayer = AudioPlayer();
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        _showNotification(message.notification!.title ?? 'New Notification',
+            message.notification!.body ?? 'You have a new notification');
+      }
+    });
+  }
+
+  Future<void> _firebaseMessagingBackgroundHandler(
+      RemoteMessage message) async {
+    // Show notification or handle it accordingly
+    await Firebase.initializeApp();
+    await _showNotification(message.notification?.title ?? 'New Notification',
+        message.notification?.body ?? 'You have a new notification');
+  }
+
+  void main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    runApp(MyApp());
   }
 
   Future<void> _initializeNotifications() async {
@@ -144,7 +173,13 @@ class _Worker2ScreenState extends State<Worker2Screen>
                       ),
                       NeuMo(
                         widget: IconButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => NotificationPage()),
+                              );
+                            },
                             icon: Icon(
                               Icons.notifications,
                               size: 30,
@@ -217,9 +252,11 @@ class _Worker2ScreenState extends State<Worker2Screen>
           ? FirebaseFirestore.instance
               .collection('tasks')
               .where('completedBy', isEqualTo: currentUserId)
+              .where('packing', isEqualTo: 'completed')
               .snapshots()
           : FirebaseFirestore.instance
               .collection('tasks')
+              .where('completedBy', isEqualTo: currentUserId)
               .where(taskType, isEqualTo: status)
               .snapshots(),
       builder: (context, snapshot) {
@@ -234,17 +271,17 @@ class _Worker2ScreenState extends State<Worker2Screen>
             return Padding(
               padding: const EdgeInsets.all(8.0),
               child: NeuMo(
-                height: 75,
+                height: 85,
                 widget: ListTile(
-                  leading: task['images'].isNotEmpty
+                  leading: task['image'].isNotEmpty
                       ? GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => FullImageScreen(
-                                    imageUrl: task['images'][
-                                        0]), // Pass the first image for preview
+                                    imageUrl: task[
+                                        'image']), // Pass the first image for preview
                               ),
                             );
                           },
@@ -252,14 +289,16 @@ class _Worker2ScreenState extends State<Worker2Screen>
                             width: 50,
                             height: 50,
                             child: Image.network(
-                              task['images']
-                                  [0], // Display first image as thumbnail
+                              task['image'], // Display first image as thumbnail
                               fit: BoxFit.cover,
                             ),
                           ),
                         )
                       : Icon(Icons.image_not_supported),
-                  title: Text(task['taskName'],style: TextStyle(fontSize: 18,fontWeight: FontWeight.w500),),
+                  title: Text(
+                    task['taskName'],
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  ),
                   subtitle: Text(DateFormat('yyyy-MM-dd HH:mm')
                       .format(task['timestamp'].toDate())),
                   trailing: status != 'completed'
@@ -275,7 +314,6 @@ class _Worker2ScreenState extends State<Worker2Screen>
                                   .doc(task.id)
                                   .update({
                                 taskType: 'completed',
-                                'completedBy': currentUserId
                               });
                               await FirebaseFirestore.instance
                                   .collection('users')
@@ -286,9 +324,11 @@ class _Worker2ScreenState extends State<Worker2Screen>
                               _showNotification('Task Completed',
                                   'You have completed a task.');
                             },
-                            child: Icon(
-                              Icons.hourglass_empty,
-                              color: Colors.red,
+                            child: Text(
+                              task['packing'],
+                              style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         )
@@ -299,23 +339,26 @@ class _Worker2ScreenState extends State<Worker2Screen>
                                 backgroundColor: Colors.transparent,
                                 elevation: 0),
                             onPressed: () async {
-                              await FirebaseFirestore.instance
-                                  .collection('tasks')
-                                  .doc(task.id)
-                                  .update({
-                                taskType: 'pending',
-                                'completedBy': FieldValue.delete()
-                              });
-                              await FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(currentUserId)
-                                  .collection('completedTasks')
-                                  .doc(task.id)
-                                  .delete();
+                              // await FirebaseFirestore.instance
+                              //     .collection('tasks')
+                              //     .doc(task.id)
+                              //     .update({
+                              //   taskType: 'pending',
+                              //   'completedBy': FieldValue.delete()
+                              // });
+                              // await FirebaseFirestore.instance
+                              //     .collection('users')
+                              //     .doc(currentUserId)
+                              //     .collection('completedTasks')
+                              //     .doc(task.id)
+                              //     .delete();
                             },
-                            child: Icon(
-                              Icons.done_all,
-                              color: Colors.green,
+                            child: Text(
+                              task['packing'],
+                              style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12),
                             ),
                           ),
                         ),
@@ -373,7 +416,7 @@ class TaskDetailsPage extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                   elevation: 0,
-                backgroundColor: Color(0xFFE0E5EC)),
+                  backgroundColor: Color(0xFFE0E5EC)),
               onPressed: () {
                 // Play audio associated with the task
                 AudioPlayer().play(UrlSource(task['audio']));
@@ -390,25 +433,26 @@ class TaskDetailsPage extends StatelessWidget {
           SizedBox(height: 20),
           Text('Images:', style: TextStyle(fontSize: 18)),
           SizedBox(height: 10),
-          for (var imageUrl in task['images']) // Loop through all images
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FullImageScreen(imageUrl: imageUrl),
-                  ),
-                );
-              },
-              child: Container(
-                margin: EdgeInsets.only(bottom: 10),
-                height: 200,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black12),
+          // Loop through all images
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      FullImageScreen(imageUrl: task['image']),
                 ),
-                child: Image.network(imageUrl, fit: BoxFit.cover),
+              );
+            },
+            child: Container(
+              margin: EdgeInsets.only(bottom: 10),
+              height: 200,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black12),
               ),
+              child: Image.network(task['image'], fit: BoxFit.cover),
             ),
+          ),
         ],
       ),
     );
@@ -431,6 +475,42 @@ class FullImageScreen extends StatelessWidget {
         child: PhotoView(
           imageProvider: NetworkImage(imageUrl),
         ),
+      ),
+    );
+  }
+}
+
+class NotificationPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Notifications'),
+        backgroundColor: Colors.blueAccent,
+      ),
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('notifications')
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+          var notifications = snapshot.data!.docs;
+          return ListView.builder(
+            itemCount: notifications.length,
+            itemBuilder: (context, index) {
+              var notification = notifications[index];
+              return ListTile(
+                title: Text(notification['title']),
+                subtitle: Text(notification['body']),
+                trailing: Text(DateFormat('yyyy-MM-dd HH:mm')
+                    .format(notification['timestamp'].toDate())),
+              );
+            },
+          );
+        },
       ),
     );
   }

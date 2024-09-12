@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:mjworkmanagement/screens/image_list_screen.dart';
-import 'package:mjworkmanagement/screens/payment.dart';
 import 'package:mjworkmanagement/screens/employee.dart';
+
+import 'package:mjworkmanagement/screens/payment.dart';
+
 import 'package:mjworkmanagement/screens/prodetails.dart';
-import 'package:mjworkmanagement/screens/products.dart';
+
 import 'package:mjworkmanagement/screens/register.dart';
 import 'package:mjworkmanagement/screens/login_screen.dart';
 import 'package:mjworkmanagement/models/task.dart';
 import 'package:mjworkmanagement/screens/status.dart';
-import 'package:mjworkmanagement/widgets/task_progress_tracker.dart';
-import 'package:mjworkmanagement/screens/task_details_screen.dart';
+
 
 class AdminPanel extends StatefulWidget {
   @override
@@ -201,7 +201,7 @@ class _AdminPanelState extends State<AdminPanel> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TaskStatusPage(),
+                    builder: (context) => UserListPage(),
                   ),
                 );
               },

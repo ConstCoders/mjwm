@@ -1,9 +1,13 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:video_player/video_player.dart';
+
+import '../widgets/neu.dart';
+import 'login_screen.dart';
 
 class ProductVideoPage extends StatefulWidget {
   @override
@@ -17,6 +21,22 @@ class _ProductVideoPageState extends State<ProductVideoPage> {
   String? _description;
   VideoPlayerController? _videoController;
   Future<void>? _initializeVideoPlayerFuture;
+
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if the user is logged in
+    _checkUserAuthentication();
+  }
+
+  // Check if user is logged in
+  void _checkUserAuthentication() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      Navigator.pushReplacementNamed(context, '/login'); // Navigate to login if not authenticated
+    }
+  }
 
   // Method to pick video using image_picker
   Future<void> _pickVideo() async {
@@ -74,6 +94,13 @@ class _ProductVideoPageState extends State<ProductVideoPage> {
     }
   }
 
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
+  }
   // Upload video to Firebase Storage and return the download URL
   Future<String> _uploadVideo(File videoFile) async {
     final storageRef = FirebaseStorage.instance.ref().child('products_videos/${DateTime.now().millisecondsSinceEpoch}.mp4');
@@ -209,6 +236,17 @@ class _ProductVideoPageState extends State<ProductVideoPage> {
           ),
         ),
       ),
+        floatingActionButton: NeuMo(
+          widget: IconButton(
+              onPressed: _logout,
+              icon: Icon(
+                Icons.power_settings_new_outlined,
+                size: 25,
+                color: Colors.orange,
+              )),
+          height: 60,
+          width: 60,
+        )
     );
   }
 }
